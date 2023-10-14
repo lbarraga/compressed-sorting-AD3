@@ -10,4 +10,8 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
 add_executable(projectAD3
         src/main.c
 
+        src/compress/compress.c
+        src/extract/extract.c
+        src/sort/sort.c
+        src/tree/tree.c
         )
