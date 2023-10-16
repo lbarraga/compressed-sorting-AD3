@@ -58,6 +58,8 @@ Hierbij moet telkens gebruik gemaakt worden van een orde-bewarende prefix-coderi
 
 Deze orde-bewarende prefix-codering (OPC) is een prefix-code die voldoet aan de definitie uit de cursus (definitie 23) met de bijkomende voorwaarden dat de codewoorden lexicografisch dezelfde volgorde hebben als het teken die ze coderen én dat de codering van de invoer-tekst resulteert in een zo klein mogelijk aantal bits onder deze voorwaarde.
 
+Omdat we de lijnen willen sorteren en we dus de grenzen van de lijn gemakkelijk willen kunnen terugvinden, kan je er voor kiezen om een newline (`\n`) niet op te nemen in de prefix-codering. In dat geval moet je op een andere manier kunnen bepalen waar een lijn start of stopt.
+
 ## Specificaties
 
 ### Programmeertaal
@@ -106,22 +108,45 @@ Voor elk karakter dat voorkomt in het bestand, schrijf je een lijn uit naar het 
 <karakter-waarde (decimaal)> <aantal voorkomens (decimaal)> <orde-bewarende prefix-code (binair)>
 ```
 
+Misschien wil je er voor kiezen om newlines (`\n`) niet te coderen omdat je een andere manier hebt om de grenzen tussen lijnen te bepalen.
+In dat geval mag je het veld waar de binaire voorstelling van de orde-bewarende prefix-code die de newline codeert, leeg laten.
+Alle andere aanwezige karakters moeten een binaire prefix-code hebben.
+
 Bijvoorbeeld, gegeven het volgende inputbestand:
 
 ```
-aa
-bbbbbbbbbbbb
+VCELEGWTLEK
+LELLPLEGTLYEK
+CLACARPGR
 ```
 
-Verwachten we volgende output:
+Is dit een mogelijke output:
 
 ```
-10 2 00
-97 2 01
-98 12 1
+10 3 
+65 2 000
+67 3 001
+69 6 010
+71 3 0110
+75 2 0111
+76 8 10
+80 2 1100
+82 2 1101
+84 2 1110
+86 1 11110
+87 1 111110
+89 1 111111
 ```
 
-Hierbij is `10` de decimale waarde van een newline (`\n`), `97` is de decimale waarde van het karakter `a` en `98` is de decimale waarde van het karakter `b`.
+Elke lijn eindigt met een newline `\n` met 10 als decimale waarde. In ons programma kiezen we ervoor om newlines niet te coderen, dus eindigt de lijn zonder binaire code.
+
+Het karakter `A` heeft decimale waarde `65` en komt 2 keer voor, `A` wordt lexicografisch eerst gesorteerd en heeft dus een prefix-code met alleen maar `0`-bits.
+
+`76` is de decimale waarde van het karakter `L` dat het vaakst (8 keer) voorkomt en heeft in dit voorbeeld de kortste prefix-code.
+
+`89` is de decimale waarde van het karakter `Y` dat maar één keer voorkomt en lexicografisch laatst gesorteerd wordt, hierdoor heeft het een lange prefix-code met allemaal `1`-bits.
+
+**Opmerking:** het is mogelijk dat jouw prefix-code afwijkt van wat er in bovenstaand voorbeeld staat.
 
 ### Datasets
 
@@ -191,8 +216,6 @@ We geven je alvast enkele tips om je op weg te helpen:
 
 - Denk goed na hoe je de optimale orde-bewarende prefix-codering opstelt. Kan je daarvoor het algoritme voor Huffman-codering gebruiken? Je kan ook inspiratie opdoen bij het algoritme om een optimale binaire zoekboom op te stellen.
 - Wanneer je met een beperkt geheugen zit (bijvoorbeeld bij extern sorteren), kan je soms de neiging hebben om je buffer zo goed mogelijk te willen vullen. Dit is efficiënter, maar kan zeer complex worden. Probeer eerst een simpele implementatie te schrijven die bijvoorbeeld altijd minstens de helft van je buffer gebruikt, die kan je achteraf nog optimaliseren indien nodig.
-
-
 
 ## Onderzoek
 
@@ -289,8 +312,7 @@ git branch -m master
 
 #### Opgave als `upstream` instellen
 
-Je kunt de opgave en data voor het project afhalen door de opgave
-repository als upstream met volgende commando's in de `projectAD3` map:
+Je kunt de opgave en data voor het project afhalen door de opgave repository als upstream in te stellen met volgende commando's in de `projectAD3` map:
 
 ```bash
 git remote add upstream git@SubGIT.UGent.be:2023-2024/AD3/project-assignment
@@ -339,7 +361,7 @@ Enkel code die op dat moment op de `master` branch staat, wordt verbeterd.
 **Als er geen code op je `master` branch staat, krijg je nul op vier voor het project.**
 Je kunt na deze deadline nog steeds pushen om wijzigingen aan te brengen aan het verslag en je benchmarks.
 
-Na **woensdag 2023-12-14 om 17:00:00** kun je ook helemaal geen wijzigingen meer aanbrengen aan je repo.
+Na **woensdag 2023-12-13 om 17:00:00** kun je ook helemaal geen wijzigingen meer aanbrengen aan je repo.
 Het verslag dat aanwezig is als pdf op de `master` branch in `extra/verslag.pdf` is je finaal verslag.
 
 ## Algemene richtlijnen
