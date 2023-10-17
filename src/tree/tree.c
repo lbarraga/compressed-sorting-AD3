@@ -3,6 +3,9 @@
 //
 
 #include <stdio.h>
+#include "make_OPC.h"
+
+#define MAX_CHAR_COUNT 128
 
 void fillFrequencyTable(FILE* file, int* frequencyTable) {
     int ch = fgetc(file);
@@ -13,8 +16,6 @@ void fillFrequencyTable(FILE* file, int* frequencyTable) {
 }
 
 void tree(const char *inputFilePath, const char *outputFilePath, int bufferSize) {
-    int MAX_CHAR_COUNT = 128;
-
     int frequencyTable[MAX_CHAR_COUNT];
 
     for (int i = 0; i < MAX_CHAR_COUNT; i++) {
@@ -25,10 +26,6 @@ void tree(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     FILE* outputFile = fopen(outputFilePath, "w");
 
     fillFrequencyTable(inputFile, frequencyTable);
+    makeOPC(frequencyTable);
 
-    for (int i = 0; i < MAX_CHAR_COUNT; i++) {
-        if (frequencyTable[i] != 0) {
-            fprintf(outputFile, "%d %d\n", i, frequencyTable[i]);
-        }
-    }
 }

@@ -11,8 +11,7 @@
 #include "compress/compress.h"
 #include "tree/tree.h"
 
-int main (int argc, char **argv)
-{
+int main (int argc, char **argv) {
     char *command = NULL;
     char *inputFile = NULL;
     char *outputFile = NULL;

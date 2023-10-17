@@ -12,6 +12,10 @@ add_executable(projectAD3
 
         src/compress/compress.c
         src/extract/extract.c
+
         src/sort/sort.c
         src/tree/tree.c
+
+        src/tree/make_OPC.c
+        src/tree/make_OPC.h
         )
