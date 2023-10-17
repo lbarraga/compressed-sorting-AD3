@@ -164,6 +164,7 @@ Je programma moet bestanden kunnen comprimeren en sorteren die voldoen aan de vo
 - Een lijn zal nooit langer zijn dan 45354 karakters (de langste sequentie in de [TrEMBL](https://www.ebi.ac.uk/uniprot/TrEMBLstats)-databank)
 - Het gemiddelde van de lengtes van de lijnen in een bestand zal niet kleiner zijn dan 8 karakters.
 - De lijnen worden gesorteerd volgens de lexicografische volgorde van de karakters (geïnterpreteerd als `unsigned char`), je moet dus geen rekening houden met [taal- en cultuurafhankelijke sorteervolgorde](http://unicode.org/reports/tr10/#Introduction).
+- De frequenties van karakters in een bestand zullen er nooit voor zorgen dat een prefix-code voor één karakter meer dan 64 bits zal nodig hebben voor de optimale orde-bewarende prefix-codering.
 
 Je programma mag natuurlijk ook bestanden kunnen afhandelen die niet aan deze specificaties voldoen, maar dat hoeft niet.
 
