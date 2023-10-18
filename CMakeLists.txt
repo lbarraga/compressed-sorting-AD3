@@ -18,4 +18,7 @@ add_executable(projectAD3
 
         src/tree/make_OPC.c
         src/tree/make_OPC.h
+
+        src/tree/hu_tucker.c
+        src/tree/hu_tucker.h
         )

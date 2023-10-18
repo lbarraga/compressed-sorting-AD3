@@ -5,9 +5,10 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
+#include <stdint-gcc.h>
 #include "make_OPC.h"
 
-int countChars(const int * frequencyTable) {
+int countChars2(const int * frequencyTable) {
     int amount = 0;
     for (int i = 0; i < 128; i++) {
         if (frequencyTable[i] != 0) {
@@ -17,7 +18,7 @@ int countChars(const int * frequencyTable) {
     return amount;
 }
 
-void fillCharBuffer(int* charBuffer, int* freqs, const int* frequencyTable) {
+void fillCharBuffer2(int* charBuffer, int* freqs, const int* frequencyTable) {
     int index = 0;
     for (int i = 0; i < 128; i++) {
         if (frequencyTable[i] != 0) {
@@ -56,29 +57,29 @@ Division* generateDivisions(Range range, int amountOfDivisions) {
     return divisions;
 }
 
-int calculateDivisionCost(Division* division, int** M) {
+uint64_t calculateDivisionCost(Division* division, uint64_t** M) {
     Range rl = division->left;
     Range rr = division->right;
     return M[rl.start][rl.end] + M[rr.start][rr.end];
 }
 
-int calculateMinimumCost(Division* divisions, int amountOfDivisions, int** M) {
-    int min = -1;
+uint64_t calculateMinimumCost(Division* divisions, int amountOfDivisions, uint64_t** M) {
+    uint64_t min = UINT64_MAX;
     for (int i = 0; i < amountOfDivisions; ++i) {
-        int divisionCost = calculateDivisionCost(&divisions[i], M);
-        if (min == -1 || divisionCost < min) {
+        uint64_t divisionCost = calculateDivisionCost(&divisions[i], M);
+        if (divisionCost < min) {
             min = divisionCost;
         }
     }
     return min;
 }
 
-int calculateMinimumCostIndex(Division* divisions, int amountOfDivisions, int** M) {
-    int min = -1;
+int calculateMinimumCostIndex(Division* divisions, int amountOfDivisions, uint64_t** M) {
+    uint64_t min = UINT64_MAX;
     int index = -1;
     for (int i = 0; i < amountOfDivisions; ++i) {
-        int divisionCost = calculateDivisionCost(&divisions[i], M);
-        if (min == -1 || divisionCost < min) {
+        uint64_t divisionCost = calculateDivisionCost(&divisions[i], M);
+        if (divisionCost < min) {
             min = divisionCost;
             index = i;
         }
@@ -86,7 +87,7 @@ int calculateMinimumCostIndex(Division* divisions, int amountOfDivisions, int** 
     return index;
 }
 
-void makePrefixCodesHulp(Range range, int bitIndex, unsigned char currentPrefix[8], unsigned char prefixCodes[][8], int* currentChar, int** M) {
+void makePrefixCodesHulp(Range range, int bitIndex, unsigned char currentPrefix[8], unsigned char prefixCodes[][8], int* currentChar, uint64_t** M) {
     int amountOfDivisions = range.end - range.start;
     Division* divisions = generateDivisions(range, amountOfDivisions);
 
@@ -109,7 +110,7 @@ void makePrefixCodesHulp(Range range, int bitIndex, unsigned char currentPrefix[
     free(divisions);
 }
 
-void makePrefixCodes(int* chars, int charAmount, unsigned char prefixCodes[charAmount][8], int** M) {
+void makePrefixCodes(int charAmount, unsigned char prefixCodes[charAmount][8], uint64_t** M) {
     unsigned char currentPrefixCode[8];
 
     int currentChar = 0;
@@ -118,7 +119,7 @@ void makePrefixCodes(int* chars, int charAmount, unsigned char prefixCodes[charA
 
 }
 
-void calculateM(int** M, int charCount) {
+void calculateM(uint64_t** M, int charCount) {
     int totalRanges = (charCount * (charCount + 1)) / 2;
     Range* ranges = generateCombinationsWithRepetition(charCount);
 
@@ -128,7 +129,7 @@ void calculateM(int** M, int charCount) {
 
         if (amountOfDivisions != 0) {
             Division* divisions = generateDivisions(range, amountOfDivisions);
-            int minimumDivisionCost = calculateMinimumCost(divisions, amountOfDivisions, M);
+            uint64_t minimumDivisionCost = calculateMinimumCost(divisions, amountOfDivisions, M);
             M[range.start][range.end] += M[range.end][range.start] + minimumDivisionCost;
             free(divisions);
         }
@@ -137,16 +138,7 @@ void calculateM(int** M, int charCount) {
     free(ranges);
 }
 
-void printM(int** M, int charCount) {
-    for (int i = 0; i < charCount; ++i) {
-        for (int j = 0; j < charCount; ++j) {
-            printf("%d ", M[i][j]);
-        }
-        printf("\n");
-    }
-}
-
-int calculateTreeCost(int** M, int charCount) {
+uint64_t calculateTreeCost(uint64_t** M, int charCount) {
     return M[0][charCount - 1]; // Top-right
 }
 
@@ -158,10 +150,10 @@ int subListSum(const int* list, int startIndex, int endIndex) {
     return sum;
 }
 
-int** initM(int* freqs, int charCount) {
-    int **M = (int **)calloc(charCount, sizeof(int *));
+uint64_t** initM(int* freqs, int charCount) {
+    uint64_t** M = (uint64_t**)calloc(charCount, sizeof(uint64_t *));
     for (int i = 0; i < charCount; ++i) {
-        M[i] = (int *)calloc(charCount, sizeof(int));
+        M[i] = (uint64_t *)calloc(charCount, sizeof(uint64_t));
     }
 
     // Fill elements under the diagonal
@@ -174,28 +166,28 @@ int** initM(int* freqs, int charCount) {
     return M;
 }
 
-void freeM(int** M, int charCount) {
+void freeM(uint64_t** M, int charCount) {
     for (int i = 0; i < charCount; ++i) {
         free(M[i]);
     }
     free(M);
 }
 
-void makeOPC(int* frequencyTable){
-    int charCount = countChars(frequencyTable);
+void makeOPC(int* frequencyTable, FILE* outputFile){
+    int charCount = countChars2(frequencyTable);
     int chars[charCount];
     int freqs[charCount];
-    fillCharBuffer(chars, freqs, frequencyTable);
+    fillCharBuffer2(chars, freqs, frequencyTable);
 
-    int** M = initM(freqs, charCount);
+    uint64_t** M = initM(freqs, charCount);
     calculateM(M, charCount);
     unsigned char prefixCodes[charCount][8];
-    makePrefixCodes(chars, charCount, prefixCodes, M);
+    makePrefixCodes(charCount, prefixCodes, M);
 
     // Print all strings
-    printf("Total bit cost: %d\n\n", calculateTreeCost(M, charCount));
+    printf("Total bit cost: %lu\n\n", calculateTreeCost(M, charCount));
     for (int i = 0; i < charCount; ++i) {
-        printf("%d %d %s\n", chars[i], freqs[i], prefixCodes[i]);
+        fprintf(outputFile, "%d %d %s\n", chars[i], freqs[i], prefixCodes[i]);
     }
 
     freeM(M, charCount);

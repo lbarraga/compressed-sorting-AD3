@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include "make_OPC.h"
+#include "hu_tucker.h"
 
 #define MAX_CHAR_COUNT 128
 
@@ -25,7 +26,8 @@ void tree(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     FILE* inputFile = fopen(inputFilePath, "r");
     FILE* outputFile = fopen(outputFilePath, "w");
 
+    printf("%s\n", inputFilePath);
     fillFrequencyTable(inputFile, frequencyTable);
-    makeOPC(frequencyTable);
+    makeHT_OPC(frequencyTable, outputFile);
 
 }

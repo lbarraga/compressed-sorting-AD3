@@ -16,6 +16,6 @@ typedef struct {
 } Division;
 
 
-void makeOPC(int* frequencyTable);
+void makeOPC(int* frequencyTable, FILE* outputFile);
 
 #endif //PROJECTAD3_MAKE_OPC_H
