@@ -193,9 +193,9 @@ void makeOPC(int* frequencyTable){
     makePrefixCodes(chars, charCount, prefixCodes, M);
 
     // Print all strings
-    printf("Total bit cost: %d", calculateTreeCost(M, charCount));
+    printf("Total bit cost: %d\n\n", calculateTreeCost(M, charCount));
     for (int i = 0; i < charCount; ++i) {
-        printf("%d: %s\n", chars[i], prefixCodes[i]);
+        printf("%d %d %s\n", chars[i], freqs[i], prefixCodes[i]);
     }
 
     freeM(M, charCount);
