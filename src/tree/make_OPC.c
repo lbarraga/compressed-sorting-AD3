@@ -109,18 +109,12 @@ void makePrefixCodesHulp(Range range, int bitIndex, unsigned char currentPrefix[
     free(divisions);
 }
 
-void makePrefixCodes(int* chars, int charAmount, int** M) {
-    unsigned char prefixCodes[charAmount][8];
+void makePrefixCodes(int* chars, int charAmount, unsigned char prefixCodes[charAmount][8], int** M) {
     unsigned char currentPrefixCode[8];
 
     int currentChar = 0;
     Range fullRange = {0, charAmount - 1};
     makePrefixCodesHulp(fullRange, 0, currentPrefixCode, prefixCodes, &currentChar, M);
-
-    // Print all strings
-    for (int i = 0; i < charAmount; ++i) {
-        printf(" %c: %s\n", chars[i], prefixCodes[i]);
-    }
 
 }
 
@@ -150,6 +144,10 @@ void printM(int** M, int charCount) {
         }
         printf("\n");
     }
+}
+
+int calculateTreeCost(int** M, int charCount) {
+    return M[0][charCount - 1]; // Top-right
 }
 
 int subListSum(const int* list, int startIndex, int endIndex) {
@@ -189,14 +187,17 @@ void makeOPC(int* frequencyTable){
     int freqs[charCount];
     fillCharBuffer(chars, freqs, frequencyTable);
 
-    for (int i = 0; i < charCount; ++i) {
-        printf("%c: %d\n", chars[i], freqs[i]);
-    }
-
     int** M = initM(freqs, charCount);
     calculateM(M, charCount);
-    printM(M, charCount);
-    makePrefixCodes(chars, charCount, M);
+    unsigned char prefixCodes[charCount][8];
+    makePrefixCodes(chars, charCount, prefixCodes, M);
+
+    // Print all strings
+    printf("Total bit cost: %d", calculateTreeCost(M, charCount));
+    for (int i = 0; i < charCount; ++i) {
+        printf("%d: %s\n", chars[i], prefixCodes[i]);
+    }
+
     freeM(M, charCount);
 
 }
