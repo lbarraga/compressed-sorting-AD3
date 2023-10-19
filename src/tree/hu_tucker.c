@@ -5,28 +5,51 @@
 #include <malloc.h>
 #include "hu_tucker.h"
 
+void generateCode(int prevCode, int length) {
+    // 1. throw away any final 1's
+    // 2. convert the last 0 to a 1
+    int newCode = prevCode + 1;
+    // 3. add additional 0's if necessary to make the length of the word right.
+    
+}
+
+void calculateLengthsHelp(int* currentChar, TreeNode* currentNode, int currentLength, int* lengths) {
+    if (currentNode->left == NULL) {
+        lengths[*currentChar] = currentLength;
+        (*currentChar)++;
+        return;
+    }
+    calculateLengthsHelp(currentChar, currentNode->left, currentLength + 1, lengths);
+    calculateLengthsHelp(currentChar, currentNode->right, currentLength + 1, lengths);
+}
+
+int* calculateLengths(int charCount, TreeNode* subOptimal) {
+    int* lengths = malloc(sizeof(int) * charCount);
+    int currentChar = 0;
+    calculateLengthsHelp(&currentChar, subOptimal, 0, lengths);
+    return lengths;
+}
+
 TreeNode* initTerminalArray(int charCount, const int* freqs) {
     TreeNode* terminalArray = malloc(sizeof(TreeNode) * charCount);
     for (int i = 0; i < charCount; ++i) {
-        terminalArray[i].left = NULL;
-        terminalArray[i].right = NULL;
-        terminalArray[i].type = TERMINAL;
-        terminalArray[i].frequency = freqs[i];
+        TreeNode node = {TERMINAL, NULL, NULL, freqs[i]};
+        terminalArray[i] = node;
     }
     return terminalArray;
 }
 
-int calculatePairCost(Pair* pair, TreeNode* treeNodes) {
+uint64_t calculatePairCost(Pair* pair, TreeNode* treeNodes) {
     TreeNode first = treeNodes[pair->first];
     TreeNode second = treeNodes[pair->second];
     return first.frequency + second.frequency;
 }
 
-void findMCPFromIndex(int beginIndex, int* minimumCost, Pair* minimumPair, int charCount, TreeNode* terminalArray) {
+void findMCPFromIndex(int beginIndex, uint64_t* minimumCost, Pair* minimumPair, int charCount, TreeNode* terminalArray) {
     for (int i = beginIndex + 1; i < charCount; ++i) {
         Pair pair = {beginIndex, i};
-        int pairCost = calculatePairCost(&pair, terminalArray);
-        if (terminalArray[i].type != DELETED && (*minimumCost == -1 || pairCost < *minimumCost)) {
+        uint64_t pairCost = calculatePairCost(&pair, terminalArray);
+        if (terminalArray[i].type != DELETED && pairCost < *minimumCost) {
             *minimumCost = pairCost;
             minimumPair->first = beginIndex;
             minimumPair->second = i;
@@ -39,23 +62,29 @@ void findMCPFromIndex(int beginIndex, int* minimumCost, Pair* minimumPair, int c
 
 
 Pair findLMCP(int charCount, TreeNode* terminalArray) {
-    int minimumCost = -1;
+    uint64_t minimumCost = UINT64_MAX;
     Pair minimumPair;
     for (int i = 0; i < charCount - 1; ++i) {
         if (terminalArray[i].type != DELETED) {
             findMCPFromIndex(i, &minimumCost, &minimumPair, charCount, terminalArray);
         }
     }
-    printf("found %d and %d!\n", minimumPair.first, minimumPair.second);
     return minimumPair;
+}
+
+TreeNode* copyTreeNode(TreeNode* treeNode) {
+    TreeNode* treeNodeCopy = malloc(sizeof(TreeNode));
+    TreeNode n = {treeNode->type, treeNode->left, treeNode->right, treeNode->frequency};
+    *treeNodeCopy = n;
+    return treeNodeCopy;
 }
 
 TreeNode combineTerminalArray(int charCount, TreeNode* nodes) {
     for (int _ = 0; _ < charCount - 1; ++_) {
         Pair pair = findLMCP(charCount, nodes);
-        TreeNode first = nodes[pair.first];
-        TreeNode second = nodes[pair.second];
-        TreeNode newNode = {INTERNAL, &first, &second, first.frequency + second.frequency};
+        TreeNode* first = copyTreeNode(&nodes[pair.first]);
+        TreeNode* second = copyTreeNode(&nodes[pair.second]);
+        TreeNode newNode = {INTERNAL, first, second, first->frequency + second->frequency};
         nodes[pair.first] = newNode;
         nodes[pair.second].type = DELETED;
     }
@@ -90,12 +119,12 @@ void makeHT_OPC(int* frequencyTable, FILE* outputFile) {
     fillCharBuffer(chars, freqs, frequencyTable);
 
     TreeNode* terminalArray = initTerminalArray(charCount, freqs);
-
     TreeNode tree = combineTerminalArray(charCount, terminalArray);
+
+    int* lengths = calculateLengths(charCount, &tree);
+    free(lengths);
     free(terminalArray);
-    printf("%d\n", tree.frequency);
+
+    printf("%lu\n", tree.frequency);
 
 }
-
-
-

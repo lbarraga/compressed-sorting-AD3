@@ -17,12 +17,13 @@ typedef struct Pair {
 } Pair;
 
 #include <stdio.h>
+#include <stdint-gcc.h>
 
 typedef struct TreeNode{
     TreeNodeType type;
     struct TreeNode* left;
     struct TreeNode* right;
-    int frequency;
+    uint64_t frequency;
 } TreeNode;
 
 void makeHT_OPC(int* frequencyTable, FILE* outputFile);

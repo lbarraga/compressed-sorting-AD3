@@ -26,8 +26,8 @@ void tree(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     FILE* inputFile = fopen(inputFilePath, "r");
     FILE* outputFile = fopen(outputFilePath, "w");
 
-    printf("%s\n", inputFilePath);
     fillFrequencyTable(inputFile, frequencyTable);
+
     makeHT_OPC(frequencyTable, outputFile);
 
 }
