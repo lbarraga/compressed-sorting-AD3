@@ -21,4 +21,4 @@ add_executable(projectAD3
 
         src/tree/hu_tucker.c
         src/tree/hu_tucker.h
-        )
+        src/tree/linkedList/linkedlist.c src/tree/linkedList/linkedlist.h)

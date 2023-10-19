@@ -5,6 +5,10 @@
 #ifndef PROJECTAD3_HU_TUCKER_H
 #define PROJECTAD3_HU_TUCKER_H
 
+#include <stdio.h>
+#include <stdint-gcc.h>
+#include "linkedList/linkedlist.h"
+
 typedef enum TreeNodeType{
     TERMINAL, // 0
     INTERNAL, // 1
@@ -16,15 +20,18 @@ typedef struct Pair {
     int second;
 } Pair;
 
-#include <stdio.h>
-#include <stdint-gcc.h>
-
 typedef struct TreeNode{
     TreeNodeType type;
     struct TreeNode* left;
     struct TreeNode* right;
     uint64_t frequency;
+    Node* dependentChars;
 } TreeNode;
+
+typedef struct TerminalNode{
+    Node* dependentChars;
+    uint64_t frequency;
+} TerminalNode;
 
 void makeHT_OPC(int* frequencyTable, FILE* outputFile);
 
