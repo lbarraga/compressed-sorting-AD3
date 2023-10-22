@@ -6,19 +6,29 @@
 #include "hu_tucker.h"
 #include "linkedList/linkedlist.h"
 
+void outputLine(int character, int frequency, int code, int codeLength, FILE* outputFile) {
+    fprintf(outputFile, "%d %d ", character, frequency);
+    for (int j = codeLength - 1; j >= 0; j--) {
+        fprintf(outputFile, "%d", (code >> j) & 1); // bits of code
+    }
+    fprintf(outputFile, "\n");
+}
+
 int generateCode(int prevCode, int prevLength, int length) {
     int lengthDiff = length - prevLength;
     int newCode = prevCode + 1;
     return (lengthDiff >= 0) ? (newCode << lengthDiff) : (newCode >> -lengthDiff);
 }
 
-TreeNode* initTerminalArray(int charCount, const int* freqs) {
-    TreeNode* terminalArray = malloc(sizeof(TreeNode) * charCount);
+void calculateCodesAndOutput(int charCount, const int* lengths, int* chars, int* freqs, FILE* outputFile) {
+    int code = -1;
+    int prevLength = 0;
     for (int i = 0; i < charCount; ++i) {
-        TreeNode node = {TERMINAL, freqs[i], initLinkedList(i)};
-        terminalArray[i] = node;
+        int length = lengths[i];
+        code = generateCode(code, prevLength, length);
+        prevLength = length;
+        outputLine(chars[i], freqs[i], code, length, outputFile);
     }
-    return terminalArray;
 }
 
 uint64_t calculatePairCost(Pair* pair, TreeNode* treeNodes) {
@@ -42,6 +52,7 @@ void findMCPFromIndex(int beginIndex, uint64_t* minimumCost, Pair* minimumPair, 
     }
 }
 
+
 Pair findLMCP(int charCount, TreeNode* terminalArray) {
     uint64_t minimumCost = UINT64_MAX;
     Pair minimumPair;
@@ -53,6 +64,14 @@ Pair findLMCP(int charCount, TreeNode* terminalArray) {
     return minimumPair;
 }
 
+TreeNode* initTerminalArray(int charCount, const int* freqs) {
+    TreeNode* terminalArray = malloc(sizeof(TreeNode) * charCount);
+    for (int i = 0; i < charCount; ++i) {
+        TreeNode node = {TERMINAL, freqs[i], initLinkedList(i)};
+        terminalArray[i] = node;
+    }
+    return terminalArray;
+}
 
 int* calculateLengths(int charCount, int* freqs) {
     int* lengths = calloc(charCount, sizeof(int));
@@ -77,25 +96,6 @@ int* calculateLengths(int charCount, int* freqs) {
     }
     free(nodes);
     return lengths;
-}
-
-void outputLine(int character, int frequency, int code, int codeLength, FILE* outputFile) {
-    fprintf(outputFile, "%d %d ", character, frequency);
-    for (int j = codeLength - 1; j >= 0; j--) {
-        fprintf(outputFile, "%d", (code >> j) & 1); // bits of code
-    }
-    fprintf(outputFile, "\n");
-}
-
-void calculateCodesAndOutput(int charCount, const int* lengths, int* chars, int* freqs, FILE* outputFile) {
-    int code = -1;
-    int prevLength = 0;
-    for (int i = 0; i < charCount; ++i) {
-        int length = lengths[i];
-        code = generateCode(code, prevLength, length);
-        prevLength = length;
-        outputLine(chars[i], freqs[i], code, length, outputFile);
-    }
 }
 
 void makeHT_OPC(int* chars, int* freqs, int charCount, FILE* outputFile) {
