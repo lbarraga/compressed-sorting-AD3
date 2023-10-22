@@ -9,12 +9,17 @@
 
 #define MAX_CHAR_COUNT 128
 
-void fillFrequencyTable(FILE* file, int* frequencyTable) {
-    int ch = fgetc(file);
-    while (ch != EOF) {
-        frequencyTable[ch]++;
-        ch = fgetc(file);
+void fillFrequencyTable(FILE* file, int* frequencyTable, int bufferSize) {
+    printf("%d\n", bufferSize);
+    unsigned char* buffer = malloc(bufferSize);
+    size_t bytesRead;
+    while ((bytesRead = fread(buffer, 1, bufferSize, file)) > 0) {
+        for (size_t i = 0; i < bytesRead; ++i) {
+            unsigned char ch = buffer[i];
+            frequencyTable[ch]++;
+        }
     }
+    free(buffer);
 }
 
 int countChars(const int * frequencyTable) {
@@ -27,7 +32,7 @@ int countChars(const int * frequencyTable) {
     return amount;
 }
 
-void fillBuffers(int* charBuffer, int* freqs, const int* frequencyTable) {
+void fillBuffers(uint8_t * charBuffer, uint64_t* freqs, const int* frequencyTable) {
     int index = 0;
     for (int i = 0; i < 128; i++) {
         if (frequencyTable[i] != 0) {
@@ -38,7 +43,7 @@ void fillBuffers(int* charBuffer, int* freqs, const int* frequencyTable) {
     }
 }
 
-void tree(const char *inputFilePath, const char *outputFilePath, int bufferSize) {
+void tree(const char *inputFilePath, const char* outputFilePath, int bufferSize) {
     int frequencyTable[MAX_CHAR_COUNT];
 
     for (int i = 0; i < MAX_CHAR_COUNT; i++) {
@@ -48,11 +53,11 @@ void tree(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     FILE* inputFile = fopen(inputFilePath, "r");
     FILE* outputFile = fopen(outputFilePath, "w");
 
-    fillFrequencyTable(inputFile, frequencyTable);
+    fillFrequencyTable(inputFile, frequencyTable, bufferSize);
 
     int charCount = countChars(frequencyTable);
-    int* charBuffer = malloc(sizeof(int) * charCount); // all present characters. e.g. ['A', 'B', 'C', 'D']
-    int* freqBuffer = malloc(sizeof(int) * charCount); // frequencies of all present characters, e.g. [4, 2, 3, 4]
+    uint8_t * charBuffer = malloc(sizeof(int) * charCount); // all present characters. e.g. ['A', 'B', 'C', 'D']
+    uint64_t* freqBuffer = malloc(sizeof(uint64_t) * charCount); // frequencies of all present characters, e.g. [4, 2, 3, 4]
     fillBuffers(charBuffer, freqBuffer, frequencyTable);
 
     makeHT_OPC(charBuffer, freqBuffer, charCount, outputFile);

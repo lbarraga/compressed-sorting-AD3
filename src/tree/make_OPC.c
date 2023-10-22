@@ -18,7 +18,7 @@ int countChars2(const int * frequencyTable) {
     return amount;
 }
 
-void fillCharBuffer2(int* charBuffer, int* freqs, const int* frequencyTable) {
+void fillCharBuffer(int* charBuffer, int* freqs, const int* frequencyTable) {
     int index = 0;
     for (int i = 0; i < 128; i++) {
         if (frequencyTable[i] != 0) {
@@ -87,13 +87,13 @@ int calculateMinimumCostIndex(Division* divisions, int amountOfDivisions, uint64
     return index;
 }
 
-void makePrefixCodesHulp(Range range, int bitIndex, unsigned char currentPrefix[8], unsigned char prefixCodes[][8], int* currentChar, uint64_t** M) {
+void makePrefixCodesHulp(Range range, int bitIndex, unsigned char currentPrefix[128], unsigned char prefixCodes[][128], int* currentChar, uint64_t** M) {
     int amountOfDivisions = range.end - range.start;
     Division* divisions = generateDivisions(range, amountOfDivisions);
 
     if (amountOfDivisions == 0) { // Base Case
         currentPrefix[bitIndex] = '\0';
-        memcpy(prefixCodes[*currentChar], currentPrefix, 8);
+        memcpy(prefixCodes[*currentChar], currentPrefix, 128);
         (*currentChar)++;
         free(divisions);
         return;
@@ -110,8 +110,8 @@ void makePrefixCodesHulp(Range range, int bitIndex, unsigned char currentPrefix[
     free(divisions);
 }
 
-void makePrefixCodes(int charAmount, unsigned char prefixCodes[charAmount][8], uint64_t** M) {
-    unsigned char currentPrefixCode[8];
+void makePrefixCodes(int charAmount, unsigned char prefixCodes[charAmount][128], uint64_t** M) {
+    unsigned char currentPrefixCode[128];
 
     int currentChar = 0;
     Range fullRange = {0, charAmount - 1};
@@ -177,15 +177,14 @@ void makeOPC(int* frequencyTable, FILE* outputFile){
     int charCount = countChars2(frequencyTable);
     int chars[charCount];
     int freqs[charCount];
-    fillCharBuffer2(chars, freqs, frequencyTable);
+    fillCharBuffer(chars, freqs, frequencyTable);
 
     uint64_t** M = initM(freqs, charCount);
     calculateM(M, charCount);
-    unsigned char prefixCodes[charCount][8];
+    unsigned char prefixCodes[charCount][128];
     makePrefixCodes(charCount, prefixCodes, M);
 
     // Print all strings
-    printf("Total bit cost: %lu\n\n", calculateTreeCost(M, charCount));
     for (int i = 0; i < charCount; ++i) {
         fprintf(outputFile, "%d %d %s\n", chars[i], freqs[i], prefixCodes[i]);
     }

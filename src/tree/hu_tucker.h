@@ -26,6 +26,6 @@ typedef struct TreeNode{
     Node* dependentChars;
 } TreeNode;
 
-void makeHT_OPC(int* chars, int* freqs, int charCount, FILE* outputFile);
+void makeHT_OPC(uint8_t* chars, uint64_t* freqs, int charCount, FILE* outputFile);
 
 #endif //PROJECTAD3_HU_TUCKER_H

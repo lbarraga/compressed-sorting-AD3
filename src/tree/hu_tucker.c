@@ -6,22 +6,22 @@
 #include "hu_tucker.h"
 #include "linkedList/linkedlist.h"
 
-void outputLine(int character, int frequency, int code, int codeLength, FILE* outputFile) {
-    fprintf(outputFile, "%d %d ", character, frequency);
+void outputLine(uint8_t character, uint64_t frequency, uint64_t code, int codeLength, FILE* outputFile) {
+    fprintf(outputFile, "%d %lu ", character, frequency);
     for (int j = codeLength - 1; j >= 0; j--) {
-        fprintf(outputFile, "%d", (code >> j) & 1); // bits of code
+        fprintf(outputFile, "%lu", (code >> j) & 1); // bits of code
     }
     fprintf(outputFile, "\n");
 }
 
-int generateCode(int prevCode, int prevLength, int length) {
+uint64_t generateCode(uint64_t prevCode, int prevLength, int length) {
     int lengthDiff = length - prevLength;
-    int newCode = prevCode + 1;
+    uint64_t newCode = prevCode + 1;
     return (lengthDiff >= 0) ? (newCode << lengthDiff) : (newCode >> -lengthDiff);
 }
 
-void calculateCodesAndOutput(int charCount, const int* lengths, int* chars, int* freqs, FILE* outputFile) {
-    int code = -1;
+void calculateCodesAndOutput(int charCount, const int* lengths, uint8_t* chars, uint64_t * freqs, FILE* outputFile) {
+    uint64_t code = -1;
     int prevLength = 0;
     for (int i = 0; i < charCount; ++i) {
         int length = lengths[i];
@@ -64,7 +64,7 @@ Pair findLMCP(int charCount, TreeNode* terminalArray) {
     return minimumPair;
 }
 
-TreeNode* initTerminalArray(int charCount, const int* freqs) {
+TreeNode* initTerminalArray(int charCount, const uint64_t* freqs) {
     TreeNode* terminalArray = malloc(sizeof(TreeNode) * charCount);
     for (int i = 0; i < charCount; ++i) {
         TreeNode node = {TERMINAL, freqs[i], initLinkedList(i)};
@@ -73,7 +73,7 @@ TreeNode* initTerminalArray(int charCount, const int* freqs) {
     return terminalArray;
 }
 
-int* calculateLengths(int charCount, int* freqs) {
+int* calculateLengths(int charCount, uint64_t* freqs) {
     int* lengths = calloc(charCount, sizeof(int));
     TreeNode* nodes = initTerminalArray(charCount, freqs);
 
@@ -98,7 +98,7 @@ int* calculateLengths(int charCount, int* freqs) {
     return lengths;
 }
 
-void makeHT_OPC(int* chars, int* freqs, int charCount, FILE* outputFile) {
+void makeHT_OPC(uint8_t* chars, uint64_t* freqs, int charCount, FILE* outputFile) {
 
     int* lengths = calculateLengths(charCount, freqs);
     calculateCodesAndOutput(charCount, lengths, chars, freqs, outputFile);
