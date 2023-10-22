@@ -15,7 +15,7 @@ int generateCode(int prevCode, int prevLength, int length) {
 TreeNode* initTerminalArray(int charCount, const int* freqs) {
     TreeNode* terminalArray = malloc(sizeof(TreeNode) * charCount);
     for (int i = 0; i < charCount; ++i) {
-        TreeNode node = {TERMINAL, NULL, NULL, freqs[i], initLinkedList(i)};
+        TreeNode node = {TERMINAL, freqs[i], initLinkedList(i)};
         terminalArray[i] = node;
     }
     return terminalArray;
@@ -54,7 +54,7 @@ Pair findLMCP(int charCount, TreeNode* terminalArray) {
 }
 
 
-int* calculateLengths2(int charCount, int* freqs) {
+int* calculateLengths(int charCount, int* freqs) {
     int* lengths = calloc(charCount, sizeof(int));
     TreeNode* nodes = initTerminalArray(charCount, freqs);
 
@@ -65,10 +65,10 @@ int* calculateLengths2(int charCount, int* freqs) {
         first->frequency += second->frequency;
         first->type = INTERNAL;
         second->type = DELETED;
-        addList(&first->dependentChars, second->dependentChars);
+        addList(&first->dependentChars, second->dependentChars); // concat dependent nodes
         Node* node = first->dependentChars;
         while (node != NULL) {
-            lengths[node->data]++;
+            lengths[node->data]++; // All dependent nodes are one longer
             node = node->next;
         }
     }
@@ -79,57 +79,29 @@ int* calculateLengths2(int charCount, int* freqs) {
     return lengths;
 }
 
-int countChars(const int * frequencyTable) {
-    int amount = 0;
-    for (int i = 0; i < 128; i++) {
-        if (frequencyTable[i] != 0) {
-            amount++;
-        }
-    }
-    return amount;
-}
-
-void fillCharBuffer(int* charBuffer, int* freqs, const int* frequencyTable) {
-    int index = 0;
-    for (int i = 0; i < 128; i++) {
-        if (frequencyTable[i] != 0) {
-            charBuffer[index] = i;
-            freqs[index] = frequencyTable[i];
-            index++;
-        }
-    }
-}
-
-void outputLine(int character, int frequency, int code, int codeLength) {
-    printf("%d %d ", character, frequency);
+void outputLine(int character, int frequency, int code, int codeLength, FILE* outputFile) {
+    fprintf(outputFile, "%d %d ", character, frequency);
     for (int j = codeLength - 1; j >= 0; j--) {
-        printf("%d", (code >> j) & 1); // bits of code
+        fprintf(outputFile, "%d", (code >> j) & 1); // bits of code
     }
-    printf("\n");
+    fprintf(outputFile, "\n");
 }
 
-void output(int charCount, int* lengths, int* chars, int* freqs) {
+void calculateCodesAndOutput(int charCount, const int* lengths, int* chars, int* freqs, FILE* outputFile) {
     int code = -1;
+    int prevLength = 0;
     for (int i = 0; i < charCount; ++i) {
         int length = lengths[i];
-        code = generateCode(code, length, lengths[i]);
-        outputLine(chars[i], freqs[i], code, length);
+        code = generateCode(code, prevLength, length);
+        prevLength = length;
+        outputLine(chars[i], freqs[i], code, length, outputFile);
     }
 }
 
-void makeHT_OPC(int* frequencyTable, FILE* outputFile) {
-    int charCount = countChars(frequencyTable);
-    int chars[charCount];
-    int freqs[charCount];
-    fillCharBuffer(chars, freqs, frequencyTable);
+void makeHT_OPC(int* chars, int* freqs, int charCount, FILE* outputFile) {
 
-    int* lengths = calculateLengths2(charCount, freqs);
-
-    for (int i = 0; i < charCount; ++i) {
-        printf("%c: %d\n", chars[i], lengths[i]);
-    }
-
-    output(charCount, lengths, chars, freqs);
+    int* lengths = calculateLengths(charCount, freqs);
+    calculateCodesAndOutput(charCount, lengths, chars, freqs, outputFile);
     free(lengths);
 
 }

@@ -22,17 +22,10 @@ typedef struct Pair {
 
 typedef struct TreeNode{
     TreeNodeType type;
-    struct TreeNode* left;
-    struct TreeNode* right;
     uint64_t frequency;
     Node* dependentChars;
 } TreeNode;
 
-typedef struct TerminalNode{
-    Node* dependentChars;
-    uint64_t frequency;
-} TerminalNode;
-
-void makeHT_OPC(int* frequencyTable, FILE* outputFile);
+void makeHT_OPC(int* chars, int* freqs, int charCount, FILE* outputFile);
 
 #endif //PROJECTAD3_HU_TUCKER_H
