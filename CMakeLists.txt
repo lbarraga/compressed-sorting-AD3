@@ -27,7 +27,7 @@ add_executable(projectAD3
 
         src/tree/linkedList/linkedlist.c
         src/tree/linkedList/linkedlist.h
-)
+        src/compress/parse_tree_file.c src/compress/parse_tree_file.h src/compress/compress_file.c src/compress/compress_file.h)
 
 # Add test executable
 add_executable(MyTest
