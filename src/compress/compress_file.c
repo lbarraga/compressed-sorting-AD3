@@ -19,12 +19,8 @@ unsigned char charToByte(const unsigned char* binaryStr) {
         byte <<= 1;
         if (binaryStr[i] == '1') {
             byte |= 1;
-            printf("1");
-        } else {
-            printf("0");
         }
     }
-    printf("\n");
     return byte;
 }
 

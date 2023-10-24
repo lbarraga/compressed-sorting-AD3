@@ -10,7 +10,6 @@
 #define MAX_CHAR_COUNT 128
 
 void fillFrequencyTable(FILE* file, int* frequencyTable, int bufferSize) {
-    printf("%d\n", bufferSize);
     unsigned char* buffer = malloc(bufferSize);
     size_t bytesRead;
     while ((bytesRead = fread(buffer, 1, bufferSize, file)) > 0) {
