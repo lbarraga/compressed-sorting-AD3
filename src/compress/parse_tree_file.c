@@ -13,11 +13,18 @@ void consumeWhiteSpace(FILE* file) {
     fseek(file, -1, SEEK_CUR);
 }
 
-uint64_t consumeNumber(FILE* file) {
+int consumeInt(FILE* file) {
+    int number;
+    fscanf(file, "%d", &number);
+    return number;
+}
+
+uint64_t consumeUint64(FILE* file) {
     uint64_t number;
     fscanf(file, "%lu", &number);
     return number;
 }
+
 
 int nCharsUntilNewline(FILE* file) {
     long originalPosition = ftell(file);
@@ -45,17 +52,13 @@ unsigned char* consumeString(FILE* file) {
 
 
 
-void parseTreeFile(uint64_t* chars, uint64_t* frequencies, unsigned char** codes, int charCount, FILE* treeFile) {
+void parseTreeFile(int* chars, uint64_t* frequencies, unsigned char** codes, int charCount, FILE* treeFile) {
     for (int i = 0; i < charCount; ++i) {
-        chars[i] = consumeNumber(treeFile);
+        chars[i] = consumeInt(treeFile);
         consumeWhiteSpace(treeFile);
-        frequencies[i] = consumeNumber(treeFile);
+        frequencies[i] = consumeUint64(treeFile);
         consumeWhiteSpace(treeFile);
         codes[i] = consumeString(treeFile);
         consumeWhiteSpace(treeFile);
-    }
-
-    for (int i = 0; i < charCount; ++i) {
-        printf("%lu %lu %s\n", chars[i], frequencies[i], codes[i]);
     }
 }
