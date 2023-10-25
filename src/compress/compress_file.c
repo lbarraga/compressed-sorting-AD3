@@ -4,6 +4,7 @@
 
 #include <stdint-gcc.h>
 #include <stdio.h>
+#include <malloc.h>
 
 int findCharIndex(const int* chars, int charToFind) {
     int index = 0;
@@ -17,9 +18,7 @@ unsigned char charToByte(const unsigned char* binaryStr) {
     unsigned char byte = 0;
     for (int i = 0; i < 8; ++i) {
         byte <<= 1;
-        if (binaryStr[i] == '1') {
-            byte |= 1;
-        }
+        byte |= binaryStr[i] == '1';
     }
     return byte;
 }
@@ -30,21 +29,24 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
     FILE* outputFile = fopen(outputFileName, "w");
 
     // Initialize variables
-    unsigned char byteBuffer[8] = {0};  // Initialize with zeroes
+    unsigned char byteBuffer[8];  // Initialize with zeroes
+    unsigned char* buffer = malloc(bufferSize);
     int amountInBuffer = 0;
     unsigned char byte;
 
-    // Read and compress
-    int ch;
-    while ((ch = fgetc(inputFile)) != EOF) {
-        unsigned char* code = codes[findCharIndex(chars, ch)];
-        for (int i = 0; code[i] != '\0'; ++i) {
-            byteBuffer[amountInBuffer] = code[i];
-            if (amountInBuffer == 7) {
-                byte = charToByte(byteBuffer);
-                fputc(byte, outputFile);
+    size_t bytesRead;
+    while ((bytesRead = fread(buffer, 1, bufferSize, inputFile)) > 0) {
+        for (size_t i = 0; i < bytesRead; ++i) {
+            unsigned char ch = buffer[i];
+            unsigned char* code = codes[findCharIndex(chars, ch)];
+            for (int j = 0; code[j] != '\0'; ++j) {
+                byteBuffer[amountInBuffer] = code[j];
+                if (amountInBuffer == 7) {
+                    byte = charToByte(byteBuffer);
+                    fputc(byte, outputFile);
+                }
+                amountInBuffer = (amountInBuffer + 1) % 8;
             }
-            amountInBuffer = (amountInBuffer + 1) % 8;
         }
     }
 
@@ -57,4 +59,5 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
     // Cleanup
     fclose(inputFile);
     fclose(outputFile);
+    free(buffer);
 }
