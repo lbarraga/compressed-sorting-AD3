@@ -27,7 +27,7 @@ void compress(const char *inputFile, const char *outputFile, int bufferSize, con
     unsigned char** codes = malloc(sizeof(unsigned char*) * charCount);
 
     parseTreeFile(chars, frequencies, codes, charCount, file);
-    compressFile(inputFile, outputFile, bufferSize, chars, frequencies, codes);
+    compressFile(inputFile, outputFile, bufferSize, chars, codes);
 
     free(chars);
     free(frequencies);
