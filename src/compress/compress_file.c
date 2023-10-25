@@ -2,7 +2,6 @@
 // Created by lukasbt on 10/23/23.
 //
 
-#include <stdint-gcc.h>
 #include <stdio.h>
 #include <malloc.h>
 
@@ -23,8 +22,7 @@ unsigned char charToByte(const unsigned char* binaryStr) {
     return byte;
 }
 
-void compressFile(const char *inputFileName, const char *outputFileName, int bufferSize,
-                  int* chars, uint64_t* frequencies, unsigned char** codes) {
+void compressFile(const char *inputFileName, const char *outputFileName, int bufferSize, int* chars, unsigned char** codes) {
     FILE* inputFile = fopen(inputFileName, "r");
     FILE* outputFile = fopen(outputFileName, "w");
 
