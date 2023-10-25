@@ -9,5 +9,8 @@
 #include <bits/types/FILE.h>
 
 void parseTreeFile(int* chars, uint64_t* frequencies, unsigned char** codes, int charAmount, FILE* treeFile);
+unsigned char* consumeString(FILE* file);
+int consumeInt(FILE* file);
+void consumeWhiteSpace(FILE* file);
 
 #endif //PROJECTAD3_PARSE_TREE_FILE_H

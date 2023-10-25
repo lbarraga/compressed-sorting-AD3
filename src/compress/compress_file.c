@@ -22,7 +22,7 @@ unsigned char charToByte(const unsigned char* binaryStr) {
     return byte;
 }
 
-void compressFile(const char *inputFileName, const char *outputFileName, int bufferSize, int* chars, unsigned char** codes) {
+void compressFile(const char *inputFileName, const char *outputFileName, int bufferSize, int* chars, unsigned char** codes, int charCount) {
     FILE* inputFile = fopen(inputFileName, "r");
     FILE* outputFile = fopen(outputFileName, "w");
 
@@ -32,6 +32,13 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
     int amountInBuffer = 0;
     unsigned char byte;
 
+    // include tree in the header of the file
+    fprintf(outputFile, "%d ", charCount);
+    for (int i = 0; i < charCount; ++i) {
+        fprintf(outputFile, "%d %s ", chars[i], codes[i]);
+    }
+
+    // Encode characters and write to file
     size_t bytesRead;
     while ((bytesRead = fread(buffer, 1, bufferSize, inputFile)) > 0) {
         for (size_t i = 0; i < bytesRead; ++i) {
