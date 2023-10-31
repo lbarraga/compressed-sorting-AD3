@@ -5,6 +5,10 @@
 #include <stdio.h>
 #include <malloc.h>
 
+int amountOfBitsUntilNewline(FILE* file) {
+
+}
+
 int findCharIndex(const int* chars, int charToFind) {
     int index = 0;
     while (chars[index] != charToFind) {
@@ -29,7 +33,7 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
     // Initialize variables
     unsigned char byteBuffer[8];  // Initialize with zeroes
     unsigned char* buffer = malloc(bufferSize);
-    int amountInBuffer = 0;
+    int currentBitIndexBuffer = 0;
     unsigned char byte;
 
     // include tree in the header of the file
@@ -39,24 +43,30 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
     }
 
     // Encode characters and write to file
+    int lineLength = 0;
     size_t bytesRead;
     while ((bytesRead = fread(buffer, 1, bufferSize, inputFile)) > 0) {
         for (size_t i = 0; i < bytesRead; ++i) {
             unsigned char ch = buffer[i];
             unsigned char* code = codes[findCharIndex(chars, ch)];
             for (int j = 0; code[j] != '\0'; ++j) {
-                byteBuffer[amountInBuffer] = code[j];
-                if (amountInBuffer == 7) {
+                byteBuffer[currentBitIndexBuffer] = code[j];
+                lineLength++;
+                if (currentBitIndexBuffer == 7) {
                     byte = charToByte(byteBuffer);
                     fputc(byte, outputFile);
                 }
-                amountInBuffer = (amountInBuffer + 1) % 8;
+                currentBitIndexBuffer = (currentBitIndexBuffer + 1) % 8;
+            }
+            if (ch == '\n') {
+                // record the amount of bits in the line and prepend that.
+
             }
         }
     }
 
     // Flush remaining bits in buffer, if any
-    if (amountInBuffer > 0) {
+    if (currentBitIndexBuffer > 0) {
         byte = charToByte(byteBuffer);
         fputc(byte, outputFile);
     }

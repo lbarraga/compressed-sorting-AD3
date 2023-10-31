@@ -31,5 +31,6 @@ add_executable(projectAD3
 
 # Add test executable
 add_executable(MyTest
+        src/tests/acutest.h
         src/tests/test_example.c
 )
