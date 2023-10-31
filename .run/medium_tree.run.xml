@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="medium_tree" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="tree -i $PROJECT_DIR$/data/medium.txt -o $PROJECT_DIR$/data/output.txt -m 1048576" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="projectAD3" TARGET_NAME="projectAD3" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="projectAD3" RUN_TARGET_NAME="projectAD3">
+    <method v="2">
+      <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>
