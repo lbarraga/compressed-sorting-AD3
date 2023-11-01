@@ -7,6 +7,17 @@
 #include <malloc.h>
 #include "parse_tree_file.h"
 
+long consumeLong(FILE *inputFile) {
+    long result;
+    fread(&result, sizeof(long), 1, inputFile);
+    return result;
+}
+
+uint8_t consumeUint8_t(FILE* inputFile) {
+    uint8_t result;
+    fread(&result, sizeof(uint8_t), 1, inputFile);
+    return result;
+}
 
 void consumeWhiteSpace(FILE* file) {
     while (isspace(fgetc(file)));

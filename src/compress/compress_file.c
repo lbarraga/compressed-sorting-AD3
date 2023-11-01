@@ -33,6 +33,14 @@ void outputBit(unsigned char bit, unsigned char* byteBuffer, int* currentBitInde
     *currentBitIndexBuffer = (*currentBitIndexBuffer + 1) % 8;
 }
 
+void outputNumber(int number, int nBits, unsigned char* byteBuffer, int* currentBitIndexBuffer, FILE* outputFile) {
+    for (int j = nBits - 1; j >= 0; --j) {
+        int bit = (number >> j) & 1; // Isolate the jth bit from the right (0-based index)
+        unsigned char char_bit = bit ? '1' : '0';
+        outputBit(char_bit, byteBuffer, currentBitIndexBuffer, outputFile);
+    }
+}
+
 void compressFile(const char *inputFileName, const char *outputFileName, int bufferSize, int* chars, unsigned char** codes, int charCount) {
     char* headerTempFileName = "/home/lukasbt/projectAD3/data/header.temp";
     FILE* inputFile = fopen(inputFileName, "r");
@@ -50,11 +58,12 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
 
     long padding = 0; // 64 bits for pointer to header, which is placed at the end of the compressed file
     fwrite(&padding, sizeof(long), 1, outputFile);
+    fwrite(&padding, sizeof(uint8_t), 1, outputFile);
 
     // include tree in the header of the file
-    fprintf(outputFile, " %d ", charCount);
+    fprintf(headerTempFile, "%d ", charCount);
     for (int i = 0; i < charCount; ++i) {
-        fprintf(outputFile, "%d %s ", chars[i], codes[i]);
+        fprintf(headerTempFile, "%d %s ", chars[i], codes[i]);
     }
 
     // Encode characters and write to file
@@ -71,17 +80,8 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
             if (ch == '\n') {
                 // output the 5 bits allocated for the length of the length
                 int lineLengthLength = (int) ceil(log2(lineLength)); // will be less than 2^5 = 32
-                for (int j = 4; j >= 0; --j) {
-                    int bit = (lineLengthLength >> j) & 1; // Isolate the jth bit from the right (0-based index)
-                    unsigned char char_bit = bit ? '1' : '0';
-                    outputBit(char_bit, byteHeaderBuffer, &currentBitIndexHeaderBuffer, headerTempFile);
-                }
-                // output [lineLengthLength] amount of bits for the lineLength
-                for (int j = lineLengthLength - 1; j >= 0; --j) {
-                    int bit = ((lineLength - 1) >> j) & 1;
-                    unsigned char char_bit = bit ? '1' : '0';
-                    outputBit(char_bit, byteHeaderBuffer, &currentBitIndexHeaderBuffer, headerTempFile);
-                }
+                outputNumber(lineLengthLength, 5, byteHeaderBuffer, &currentBitIndexHeaderBuffer, headerTempFile);
+                outputNumber(lineLength - 1, lineLengthLength, byteHeaderBuffer, &currentBitIndexHeaderBuffer, headerTempFile);
                 lineLength = 0;
             }
         }
@@ -90,10 +90,14 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
     // Flush remaining bits in inputBuffer, if any
     if (currentBitIndexInputBuffer > 0) {
         fputc(stringToByte(byteInputBuffer), outputFile);
+    } else {
+        currentBitIndexInputBuffer = 8;
     }
 
     if (currentBitIndexHeaderBuffer > 0) {
         fputc(stringToByte(byteHeaderBuffer), headerTempFile);
+    } else {
+        currentBitIndexHeaderBuffer = 8;
     }
 
     // Append the header to the file
@@ -111,6 +115,8 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
 
     fseek(outputFile, 0, SEEK_SET);
     fwrite(&headerBegin, sizeof(long), 1, outputFile);
+    fwrite(&currentBitIndexInputBuffer, sizeof(uint8_t), 1, outputFile);
+    fwrite(&currentBitIndexHeaderBuffer, sizeof(uint8_t), 1, outputFile);
 
 
     // Cleanup
