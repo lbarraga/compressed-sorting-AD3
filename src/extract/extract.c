@@ -64,7 +64,9 @@ void extract(const char *inputFilePath, const char *outputFilePath, int bufferSi
     long headerPosition = consumeLong(inputFile);
     buildPrefixTreeFromHeader(inputFile, headerPosition, root);
 
+    consumeLong(inputFile); // amount of lines not needed
     uint8_t lastByteBitCount = consumeUint8_t(inputFile); // amount of bits that are not filler bits in the last byte
+    consumeUint8_t(inputFile); // same for header, but not line positions are not needed in extract
     printf("%d\n", lastByteBitCount);
 
     // encode the file

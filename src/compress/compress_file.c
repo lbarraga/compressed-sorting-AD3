@@ -42,7 +42,7 @@ void outputNumber(int number, int nBits, unsigned char* byteBuffer, int* current
 }
 
 void compressFile(const char *inputFileName, const char *outputFileName, int bufferSize, int* chars, unsigned char** codes, int charCount) {
-    char* headerTempFileName = "/home/lukasbt/projectAD3/data/header.temp";
+    char* headerTempFileName = "header.temp";
     FILE* inputFile = fopen(inputFileName, "r");
     FILE* outputFile = fopen(outputFileName, "w");
     FILE* headerTempFile = fopen(headerTempFileName, "w");
@@ -56,9 +56,11 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
     int currentBitIndexInputBuffer = 0;
     int currentBitIndexHeaderBuffer = 0;
 
-    long padding = 0; // 64 bits for pointer to header, which is placed at the end of the compressed file
-    fwrite(&padding, sizeof(long), 1, outputFile);
-    fwrite(&padding, sizeof(uint8_t), 1, outputFile);
+    long padding = 0;
+    fwrite(&padding, sizeof(long), 1, outputFile); // 64 bits for pointer to header, which is placed at the end of the compressed file
+    fwrite(&padding, sizeof(long), 1, outputFile); // Amount of lines in the file.
+    fwrite(&padding, sizeof(uint8_t), 1, outputFile); // amount of significant bits in last byte of encodings
+    fwrite(&padding, sizeof(uint8_t), 1, outputFile); // amount of significant bits in last byte of header
 
     // include tree in the header of the file
     fprintf(headerTempFile, "%d ", charCount);
@@ -68,6 +70,7 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
 
     // Encode characters and write to file
     int lineLength = 0;
+    long totalLines = 0;
     size_t bytesRead;
     while ((bytesRead = fread(inputBuffer, 1, bufferSize, inputFile)) > 0) {
         for (size_t i = 0; i < bytesRead; ++i) {
@@ -83,6 +86,7 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
                 outputNumber(lineLengthLength, 5, byteHeaderBuffer, &currentBitIndexHeaderBuffer, headerTempFile);
                 outputNumber(lineLength - 1, lineLengthLength, byteHeaderBuffer, &currentBitIndexHeaderBuffer, headerTempFile);
                 lineLength = 0;
+                totalLines++;
             }
         }
     }
@@ -113,8 +117,10 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
         ch = fgetc(headerTempFile);
     }
 
+    // Fill in padding with info
     fseek(outputFile, 0, SEEK_SET);
-    fwrite(&headerBegin, sizeof(long), 1, outputFile);
+        fwrite(&headerBegin, sizeof(long), 1, outputFile);
+    fwrite(&totalLines, sizeof(long), 1, outputFile);
     fwrite(&currentBitIndexInputBuffer, sizeof(uint8_t), 1, outputFile);
     fwrite(&currentBitIndexHeaderBuffer, sizeof(uint8_t), 1, outputFile);
 

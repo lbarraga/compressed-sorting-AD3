@@ -1,4 +1,5 @@
 AAAA
-BB
-CCC
-DDDD
+AAA
+AA
+A
+

@@ -9,8 +9,8 @@
 #include "../compress/parse_tree_file.h"
 
 typedef struct LineInterval {
-    int start;
-    int end;
+    long start;
+    int length;
 } LineInterval;
 
 void sort(const char *inputFile, const char *outputFile, int bufferSize);
