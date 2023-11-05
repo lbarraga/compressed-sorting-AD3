@@ -84,7 +84,7 @@ void extract(const char *inputFilePath, const char *outputFilePath, int bufferSi
             }
         }
     }
-    // 11111100
+
     fread(&buffer, 1, 1, inputFile); // read byte into buffer
     for (int bitPosition = 7; bitPosition >= 8 - lastByteBitCount; --bitPosition) {
         int bitValue = (buffer >> bitPosition) & 1; // Extract the bit value

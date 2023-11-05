@@ -119,7 +119,7 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
 
     // Fill in padding with info
     fseek(outputFile, 0, SEEK_SET);
-        fwrite(&headerBegin, sizeof(long), 1, outputFile);
+    fwrite(&headerBegin, sizeof(long), 1, outputFile);
     fwrite(&totalLines, sizeof(long), 1, outputFile);
     fwrite(&currentBitIndexInputBuffer, sizeof(uint8_t), 1, outputFile);
     fwrite(&currentBitIndexHeaderBuffer, sizeof(uint8_t), 1, outputFile);

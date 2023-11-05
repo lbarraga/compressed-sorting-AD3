@@ -20,6 +20,18 @@ int readNextBit(unsigned char* byteBuffer, int* bitsReadFromBuffer, FILE* file) 
     return bit;
 }
 
+/// TODO dit in een utils file steken
+void outputBit2(int bit, unsigned char* byteBuffer, int* currentBitIndexBuffer, FILE* outputFile) {
+    if (*currentBitIndexBuffer == 8) {
+        fputc(*byteBuffer, outputFile);
+        *byteBuffer = 0;
+        *currentBitIndexBuffer = 0;
+    }
+    *byteBuffer |= bit << (7 - *currentBitIndexBuffer);
+    (*currentBitIndexBuffer)++;
+}
+
+/// TODO per byte gaat eigenlijk veel sneller
 int compareLineIntervals(const void *a, const void *b) {
     LineInterval* intervalA = (LineInterval*) a;
     LineInterval* intervalB = (LineInterval*) b;
@@ -83,7 +95,7 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     globalInputFileA = fopen(inputFilePath, "r");
     globalInputFileB = fopen(inputFilePath, "r");
     FILE* outputFile = fopen(outputFilePath, "w");
-    FILE* sortTemp = fopen("/home/lukasbt/projectAD3/data/sort.temp", "rw");
+    FILE* sortTemp = fopen("/home/lukasbt/projectAD3/data/sort.temp", "w");
 
     long headerPosition = consumeLong(inputFile);
     long amountOfNewLines = consumeLong(inputFile);
@@ -109,37 +121,43 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
         lineIntervals[i].length = l;
         startIndex += l;
     }
+
+    printf("starting sort...\n");
     qsort(lineIntervals, amountOfNewLines, sizeof(LineInterval), compareLineIntervals);
-    return;
+    printf("sorted...\n");
 
-    compareLineIntervals(&lineIntervals[1], &lineIntervals[2]);
+    // Write the lines in order of the sort to the temporary sorted file.
+    fwrite(&headerPosition, sizeof(long), 1, sortTemp); // 64 bits for pointer to header, which is placed at the end of the compressed file
+    fwrite(&amountOfNewLines, sizeof(long), 1, sortTemp); // Amount of lines in the file.
+    fwrite(&lastByteBitCountEncodings, sizeof(uint8_t), 1, sortTemp); // amount of significant bits in last byte of encodings
+    fwrite(&lastByteBitCountHeader, sizeof(uint8_t), 1, sortTemp); // amount of significant bits in last byte of header
 
+    unsigned char outputBuffer = 0;
+    int bitsWrittenInByte = 0;
     for (int i = 0; i < amountOfNewLines; ++i) {
         LineInterval interval = lineIntervals[i];
-        bitReadFromBuffer = 8;
         fseek(inputFile, interval.start / 8, SEEK_SET);
+        bitReadFromBuffer = 8;
         for (int j = 0; j < interval.start % 8; ++j) {
             readNextBit(&byteBuffer, &bitReadFromBuffer, inputFile);
         }
         for (int j = 0; j < interval.length; ++j) {
             int bit = readNextBit(&byteBuffer, &bitReadFromBuffer, inputFile);
-            printf("%d", bit);
+            outputBit2(bit, &outputBuffer, &bitsWrittenInByte, sortTemp);
         }
-        printf("\n");
     }
 
-
-    for (int i = 0; i < amountOfNewLines; ++i) {
-        LineInterval lineInterval = lineIntervals[i];
-        printf("%ld - %d\n", lineInterval.start, lineInterval.length);
+    if (bitsWrittenInByte > 0) {
+        fputc(outputBuffer, sortTemp); // flush
     }
 
-    printf("-------------\n");
-
-
-
-    for (int i = 0; i < amountOfNewLines; ++i) {
-        LineInterval lineInterval = lineIntervals[i];
-        printf("%ld - %d\n", lineInterval.start, lineInterval.length);
+    // Copy the header
+    fseek(inputFile, headerPosition, SEEK_SET);
+    int ch = fgetc(inputFile);
+    while (ch != EOF) {
+        fputc(ch, sortTemp);
+        ch = fgetc(inputFile);
     }
+
+    free(lineIntervals);
 }

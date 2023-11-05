@@ -2,7 +2,7 @@
   <configuration default="false" name="tiny_extract" type="CMakeRunConfiguration" factoryName="Application" folderName="tiny" PROGRAM_PARAMS="extract -i $PROJECT_DIR$/data/compressed.txt -o $PROJECT_DIR$/data/extracted.txt -m 1048576" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="projectAD3" TARGET_NAME="projectAD3" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="projectAD3" RUN_TARGET_NAME="projectAD3">
     <method v="2">
       <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      <option name="RunConfigurationTask" enabled="false" run_configuration_name="tiny_compress" run_configuration_type="CMakeRunConfiguration" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="tiny_compress" run_configuration_type="CMakeRunConfiguration" />
     </method>
   </configuration>
 </component>
