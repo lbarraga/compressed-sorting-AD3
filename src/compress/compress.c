@@ -22,16 +22,14 @@ void compress(const char *inputFile, const char *outputFile, int bufferSize, con
     FILE* file = fopen(treeFilePath, "r");
 
     int charCount = calculateLineAmount(file);
-    int* chars = malloc(sizeof(int) * charCount);
     uint64_t* frequencies = malloc(sizeof(uint64_t) * charCount);
-    unsigned char** codes = malloc(sizeof(unsigned char*) * charCount);
+    OPC** codes = calloc(128, sizeof(OPC*));
 
-    parseTreeFile(chars, frequencies, codes, charCount, file);
-    compressFile(inputFile, outputFile, bufferSize, chars, codes, charCount);
+    parseTreeFile(frequencies, codes, charCount, file);
+    compressFile(inputFile, outputFile, bufferSize, codes, charCount);
 
-    free(chars);
     free(frequencies);
-    for (int i = 0; i < charCount; ++i) {
+    for (int i = 0; i < 128; ++i) {
         free(codes[i]);
     }
     free(codes);

@@ -32,7 +32,11 @@ add_executable(projectAD3
         src/compress/parse_tree_file.h
 
         src/compress/compress_file.c
-        src/compress/compress_file.h)
+        src/compress/compress_file.h
+
+        src/IO/bit_input/bit_io.c
+        src/IO/bit_input/bit_io.h
+        )
 
 target_link_libraries(projectAD3 m)
 
@@ -40,4 +44,4 @@ target_link_libraries(projectAD3 m)
 add_executable(MyTest
         src/tests/acutest.h
         src/tests/test_example.c
-)
+        )

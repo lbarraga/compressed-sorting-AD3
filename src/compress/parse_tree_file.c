@@ -61,15 +61,30 @@ unsigned char* consumeString(FILE* file) {
     return codeRead;
 }
 
+OPC* consumeCode(FILE* file) {
+    unsigned char* code = consumeString(file);
+    uint64_t result = 0;
+    int i = 0;
+    while (code[i] != '\0') {
+        int bit = code[i] == '1'? 1: 0;
+        result <<= 1;
+        result |= bit;
+        i++;
+    }
+    free(code);
+    OPC* opc = malloc(sizeof(OPC));
+    opc->code = result;
+    opc->length = i;
+    return opc;
+}
 
-
-void parseTreeFile(int* chars, uint64_t* frequencies, unsigned char** codes, int charCount, FILE* treeFile) {
+void parseTreeFile(uint64_t* frequencies, OPC** codes, int charCount, FILE* treeFile) {
     for (int i = 0; i < charCount; ++i) {
-        chars[i] = consumeInt(treeFile);
+        int charAsInt = consumeInt(treeFile);
         consumeWhiteSpace(treeFile);
         frequencies[i] = consumeUint64(treeFile);
         consumeWhiteSpace(treeFile);
-        codes[i] = consumeString(treeFile);
+        codes[charAsInt] = consumeCode(treeFile);
         consumeWhiteSpace(treeFile);
     }
 }

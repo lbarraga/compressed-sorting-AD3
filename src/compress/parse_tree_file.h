@@ -7,8 +7,9 @@
 
 #include <stdint-gcc.h>
 #include <bits/types/FILE.h>
+#include "compress.h"
 
-void parseTreeFile(int* chars, uint64_t* frequencies, unsigned char** codes, int charAmount, FILE* treeFile);
+void parseTreeFile(uint64_t* frequencies, OPC** codes, int charAmount, FILE* treeFile);
 unsigned char* consumeString(FILE* file);
 int consumeInt(FILE* file);
 void consumeWhiteSpace(FILE* file);
