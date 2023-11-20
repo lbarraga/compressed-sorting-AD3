@@ -7,6 +7,7 @@
 
 #include <bits/types/FILE.h>
 #include <stdint-gcc.h>
+#include <stddef.h>
 #include "../../compress/compress.h"
 
 typedef struct BitOutputHandler {

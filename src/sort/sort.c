@@ -3,7 +3,6 @@
 //
 
 #include <stdio.h>
-#include <malloc.h>
 #include <stdlib.h>
 #include "sort.h"
 
@@ -12,7 +11,7 @@ FILE* globalInputFileB = NULL;
 
 int readNextBit(unsigned char* byteBuffer, int* bitsReadFromBuffer, FILE* file) {
     if (*bitsReadFromBuffer == 8) {
-        fread(byteBuffer, 1, 1, file);
+        if (fread(byteBuffer, 1, 1, file)) {} // TODO
         (*bitsReadFromBuffer) = 0;
     }
     int bit = (*byteBuffer >> (7 - *bitsReadFromBuffer)) & 1;
@@ -91,10 +90,11 @@ void skipTree(FILE* inputFile) {
 }
 
 void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize) {
+    printf("%s%d", outputFilePath, bufferSize);
     FILE* inputFile = fopen(inputFilePath, "r");
     globalInputFileA = fopen(inputFilePath, "r");
     globalInputFileB = fopen(inputFilePath, "r");
-    FILE* outputFile = fopen(outputFilePath, "w");
+    //FILE* outputFile = fopen(outputFilePath, "w");
     FILE* sortTemp = fopen("/home/lukasbt/projectAD3/data/sort.temp", "w");
 
     long headerPosition = consumeLong(inputFile);

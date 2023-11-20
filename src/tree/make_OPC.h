@@ -5,6 +5,8 @@
 #ifndef PROJECTAD3_MAKE_OPC_H
 #define PROJECTAD3_MAKE_OPC_H
 
+#include <stdio.h>
+
 typedef struct {
     int start;
     int end;

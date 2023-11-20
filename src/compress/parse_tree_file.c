@@ -5,17 +5,18 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <malloc.h>
+#include <stdlib.h>
 #include "parse_tree_file.h"
 
 long consumeLong(FILE *inputFile) {
     long result;
-    fread(&result, sizeof(long), 1, inputFile);
+    if (fread(&result, sizeof(long), 1, inputFile)) {}
     return result;
 }
 
 uint8_t consumeUint8_t(FILE* inputFile) {
     uint8_t result;
-    fread(&result, sizeof(uint8_t), 1, inputFile);
+    if (fread(&result, sizeof(uint8_t), 1, inputFile)) {};
     return result;
 }
 
@@ -26,13 +27,13 @@ void consumeWhiteSpace(FILE* file) {
 
 int consumeInt(FILE* file) {
     int number;
-    fscanf(file, "%d", &number);
+    if(fscanf(file, "%d", &number)) {}
     return number;
 }
 
 uint64_t consumeUint64(FILE* file) {
     uint64_t number;
-    fscanf(file, "%lu", &number);
+    if (fscanf(file, "%lu", &number)) {}
     return number;
 }
 

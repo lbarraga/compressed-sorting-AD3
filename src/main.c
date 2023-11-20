@@ -3,9 +3,9 @@
 //
 
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 #include "sort/sort.h"
 #include "extract/extract.h"
 #include "compress/compress.h"
