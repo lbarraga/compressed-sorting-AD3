@@ -7,10 +7,13 @@
 #include <string.h>
 #include "bit_io.h"
 
-BitOutputHandler createOutputHandler(FILE* file, size_t size) {
+#define N_BITS_UINT64 64
+
+BitOutputHandler createOutputHandler(FILE* file, size_t size_bytes) {
+    size_t bufferLength = size_bytes / sizeof(uint64_t);
     BitOutputHandler handler;
-    handler.buffer = calloc(size, sizeof(unsigned char));
-    handler.size = size;
+    handler.buffer = calloc(bufferLength, sizeof(uint64_t));
+    handler.size = bufferLength;
     handler.bytesWritten = 0;
     handler.bitsWritten = 0;
     handler.outputStream = file;
@@ -21,39 +24,42 @@ void freeOutputHandler(BitOutputHandler handler) {
     free(handler.buffer);
 }
 
-void printByte(unsigned char byte) {
-    for (int i = 7; i >= 0; --i) {
-        printf("%d", (byte >> i) & 1);
+void printByte(uint64_t byte) {
+    for (int i = N_BITS_UINT64 - 1; i >= 0; --i) {
+        printf("%lu", (byte >> i) & 1);
     }
 }
 
-// TODO ook een outputNBits die dan de OR over de volledige doet. eigenlijk gewoon volledig veranderen.
-void outputBit(BitOutputHandler* handler, uint64_t bit) {
-    if (handler->bitsWritten == 8) {
+void outputNBits(BitOutputHandler* handler, uint64_t bits, int length) {
+    if (handler->bitsWritten == N_BITS_UINT64) {
         handler->bytesWritten++;
         handler->bitsWritten = 0;
     }
     if (handler->bytesWritten == handler->size) {
-        fwrite(handler->buffer, sizeof(unsigned char), handler->size, handler->outputStream);
-        memset(handler->buffer, 0, handler->size);
+        fwrite(handler->buffer, sizeof(uint64_t), handler->size, handler->outputStream);
+        memset(handler->buffer, 0, handler->size * sizeof(uint64_t));
         handler->bytesWritten = 0;
     }
-    handler->buffer[handler->bytesWritten] |= bit << (7 - handler->bitsWritten);
-    handler->bitsWritten++;
+    handler->buffer[handler->bytesWritten] |= bits << (N_BITS_UINT64 - handler->bitsWritten - length);
+    handler->bitsWritten += length;
 }
 
-void outputNumber(BitOutputHandler* handler, uint64_t number, int nBits) {
-    for (int j = nBits - 1; j >= 0; --j) {
-        uint64_t bit = (number >> j) & 1; // Isolate the jth bit from the right (0-based index)
-        outputBit(handler, bit);
+void outputBitString(BitOutputHandler* handler, uint64_t bits, int length) {
+    int firstChunkMax = N_BITS_UINT64 - handler->bitsWritten;
+
+    if (length <= firstChunkMax) {
+        outputNBits(handler, bits, length);
+        return;
     }
-}
 
-int outputCode(BitOutputHandler* handler, OPC* code) {
-    outputNumber(handler, code->code, code->length);
-    return code->length;
+    outputNBits(handler, bits >> (length - firstChunkMax), firstChunkMax);
+    outputNBits(handler, bits, length - firstChunkMax);
+
 }
 
 void flushBits(BitOutputHandler* handler) {
-    fwrite(handler->buffer, 1, handler->bytesWritten + 1, handler->outputStream);
+    // [<- 64  ->]
+    // [101...011] [001...110] ... [110...???] ... [000...000]
+    //                           ^bytes written^
+    fwrite(handler->buffer, sizeof(uint64_t), handler->bytesWritten + 1, handler->outputStream);
 }

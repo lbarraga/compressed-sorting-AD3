@@ -70,13 +70,13 @@ void extract(const char *inputFilePath, const char *outputFilePath, int bufferSi
     printf("%d\n", lastByteBitCount);
 
     // encode the file
-    unsigned char buffer; // To hold each byte read from the file
+    uint64_t buffer; // To hold each byte read from the file
     PrefixNode* currentPrefixNode = root;
 
-    while (ftell(inputFile) + 1 < headerPosition) {
-        fread(&buffer, 1, 1, inputFile); // read byte into buffer
-        for (int bitPosition = 7; bitPosition >= 0; --bitPosition) {
-            int bitValue = (buffer >> bitPosition) & 1; // Extract the bit value
+    while (ftell(inputFile) + 8 < headerPosition) {
+        fread(&buffer, sizeof(uint64_t), 1, inputFile); // read byte into buffer
+        for (int bitPosition = 63; bitPosition >= 0; --bitPosition) {
+            uint64_t bitValue = (buffer >> bitPosition) & 1; // Extract the bit value
             currentPrefixNode = bitValue == 0? currentPrefixNode->left: currentPrefixNode->right;
             if (currentPrefixNode->left == NULL) {
                 fprintf(outputFile, "%c", currentPrefixNode->character);
@@ -84,10 +84,11 @@ void extract(const char *inputFilePath, const char *outputFilePath, int bufferSi
             }
         }
     }
-    // 11111100
-    fread(&buffer, 1, 1, inputFile); // read byte into buffer
-    for (int bitPosition = 7; bitPosition >= 8 - lastByteBitCount; --bitPosition) {
-        int bitValue = (buffer >> bitPosition) & 1; // Extract the bit value
+
+    // last uint64, does not need to iterate over the whole 64 bit
+    fread(&buffer, sizeof(uint64_t), 1, inputFile); // read byte into buffer
+    for (int bitPosition = 63; bitPosition >= 64 - lastByteBitCount; --bitPosition) {
+        uint64_t bitValue = (buffer >> bitPosition) & 1; // Extract the bit value
         currentPrefixNode = bitValue == 0? currentPrefixNode->left: currentPrefixNode->right;
         if (currentPrefixNode->left == NULL) {
             fprintf(outputFile, "%c", currentPrefixNode->character);

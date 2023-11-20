@@ -4,11 +4,11 @@
 
 #include <stdio.h>
 #include <malloc.h>
-#include "make_OPC.h"
 #include "hu_tucker.h"
 
 #define MAX_CHAR_COUNT 128
 
+// TODO geen int maar uint64t
 void fillFrequencyTable(FILE* file, int* frequencyTable, int bufferSize) {
     unsigned char* buffer = malloc(bufferSize);
     size_t bytesRead;
