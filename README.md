@@ -182,6 +182,7 @@ Je mag hiervoor gebruik maken van de meegeleverde `test.h`-header van het framew
 - Je mag niet uitschrijven naar `stderr`, tenzij er iets fout loopt (bv. een ongeldige optie) of als dit expliciet wordt meegegeven als argument (bv. `-v` om verbose modus in te schakelen).
 - Je programma moet single threaded zijn en mag dus niet forken.
 - De buffer die je gebruikt om ingelezen strings in op te slaan mag niet groter zijn dan de grootte die meegegeven werd met de `-m` optie.
+- De kleinste buffergrootte die je zal krijgen is `33554432` (32 MiB), je moet hiermee bestanden kunnen comprimeren tot 10 GiB groot.
 
 We voorzien 50% extra geheugen voor je programma om overhead op te vangen. Wanneer we een buffergrootte van 100MiB opgeven, mag het totaal van jouw programma dus niet meer dan 150MiB geheugen gebruiken.
 We zullen je geheugengebruik beperken van de CGroup-functionaliteit met `systemd-run`:
