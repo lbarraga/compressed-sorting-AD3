@@ -21,5 +21,5 @@ src/compress/parse_tree_file.h
 src/compress/compress_file.c
 src/compress/compress_file.h
 
-src/IO/bit_input/bit_io.c
 src/IO/bit_input/bit_io.h
+src/IO/bit_input/bit_io.c
