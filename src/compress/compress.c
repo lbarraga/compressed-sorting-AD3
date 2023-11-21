@@ -6,6 +6,7 @@
 #include <malloc.h>
 #include "parse_tree_file.h"
 #include "compress_file.h"
+#include "../tree/tree.h"
 
 int calculateLineAmount(FILE* file) {
     int amount = 0;
@@ -18,8 +19,15 @@ int calculateLineAmount(FILE* file) {
     return amount;
 }
 
-void compress(const char *inputFile, const char *outputFile, int bufferSize, const char *treeFilePath) {
+void compress(const char *inputFile, const char *outputFile, int bufferSize, char *treeFilePath) {
+
     FILE* file = fopen(treeFilePath, "r");
+    if (treeFilePath == NULL) {
+        file = tmpfile();
+        treeWithOutputFilePointer(inputFile, file, bufferSize);
+        fseek(file, 0, SEEK_SET);
+    }
+
 
     int charCount = calculateLineAmount(file);
     uint64_t* frequencies = malloc(sizeof(uint64_t) * charCount);

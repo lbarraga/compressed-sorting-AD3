@@ -10,7 +10,7 @@ typedef struct OPC {
     uint8_t length;
 } OPC;
 
-void compress(const char *inputFile, const char *outputFile, int bufferSize, const char *treeFile);
+void compress(const char *inputFile, const char *outputFile, int bufferSize, char *treeFile);
 
 
 #endif //PROJECTAD3_COMPRESS_H

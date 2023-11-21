@@ -42,7 +42,7 @@ void fillBuffers(uint8_t * charBuffer, uint64_t* freqs, const int* frequencyTabl
     }
 }
 
-void tree(const char *inputFilePath, const char* outputFilePath, int bufferSize) {
+void treeWithOutputFilePointer(const char *inputFilePath, FILE* outputFile, int bufferSize) {
     int frequencyTable[MAX_CHAR_COUNT];
 
     for (int i = 0; i < MAX_CHAR_COUNT; i++) {
@@ -50,7 +50,6 @@ void tree(const char *inputFilePath, const char* outputFilePath, int bufferSize)
     }
 
     FILE* inputFile = fopen(inputFilePath, "r");
-    FILE* outputFile = fopen(outputFilePath, "w");
 
     fillFrequencyTable(inputFile, frequencyTable, bufferSize);
 
@@ -64,4 +63,11 @@ void tree(const char *inputFilePath, const char* outputFilePath, int bufferSize)
     free(charBuffer);
     free(freqBuffer);
 
+    fclose(inputFile);
+}
+
+void tree(const char *inputFilePath, const char* outputFilePath, int bufferSize) {
+    FILE* outputFile = fopen(outputFilePath, "w");
+    treeWithOutputFilePointer(inputFilePath, outputFile, bufferSize);
+    fclose(outputFile);
 }

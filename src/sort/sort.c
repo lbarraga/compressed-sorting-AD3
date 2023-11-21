@@ -11,7 +11,7 @@ FILE* globalInputFileB = NULL;
 
 int readNextBit(unsigned char* byteBuffer, int* bitsReadFromBuffer, FILE* file) {
     if (*bitsReadFromBuffer == 8) {
-        if (fread(byteBuffer, 1, 1, file)) {} // TODO
+        fread(byteBuffer, 1, 1, file);
         (*bitsReadFromBuffer) = 0;
     }
     int bit = (*byteBuffer >> (7 - *bitsReadFromBuffer)) & 1;
@@ -90,6 +90,9 @@ void skipTree(FILE* inputFile) {
 }
 
 void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize) {
+
+    return;
+
     printf("%s%d", outputFilePath, bufferSize);
     FILE* inputFile = fopen(inputFilePath, "r");
     globalInputFileA = fopen(inputFilePath, "r");

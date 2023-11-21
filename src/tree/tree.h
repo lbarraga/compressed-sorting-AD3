@@ -16,5 +16,6 @@
  * @param bufferSize De grootte van de buffer die je mag gebruiken om de ingelezen strings in op te slaan, in bytes.
  */
 void tree(const char *inputFile, const char *outputFile, int bufferSize);
+void treeWithOutputFilePointer(const char *inputFilePath, FILE* outputFile, int bufferSize);
 
 #endif //PROJECTAD3_TREE_H

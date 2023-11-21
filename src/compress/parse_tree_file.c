@@ -10,13 +10,13 @@
 
 long consumeLong(FILE *inputFile) {
     long result;
-    if (fread(&result, sizeof(long), 1, inputFile)) {}
+    fread(&result, sizeof(long), 1, inputFile);
     return result;
 }
 
 uint8_t consumeUint8_t(FILE* inputFile) {
     uint8_t result;
-    if (fread(&result, sizeof(uint8_t), 1, inputFile)) {};
+    fread(&result, sizeof(uint8_t), 1, inputFile);
     return result;
 }
 
@@ -27,13 +27,13 @@ void consumeWhiteSpace(FILE* file) {
 
 int consumeInt(FILE* file) {
     int number;
-    if(fscanf(file, "%d", &number)) {}
+    fscanf(file, "%d", &number);
     return number;
 }
 
 uint64_t consumeUint64(FILE* file) {
     uint64_t number;
-    if (fscanf(file, "%lu", &number)) {}
+    fscanf(file, "%lu", &number);
     return number;
 }
 
