@@ -1,25 +1,25 @@
-src/main.c
+main.c
 
-src/compress/compress.c
-src/extract/extract.c
+compress/compress.c
+extract/extract.c
 
-src/sort/sort.c
-src/tree/tree.c
+sort/sort.c
+tree/tree.c
 
-src/tree/make_OPC.c
-src/tree/make_OPC.h
+tree/make_OPC.c
+tree/make_OPC.h
 
-src/tree/hu_tucker.c
-src/tree/hu_tucker.h
+tree/hu_tucker.c
+tree/hu_tucker.h
 
-src/tree/linkedList/linkedlist.c
-src/tree/linkedList/linkedlist.h
+tree/linkedList/linkedlist.c
+tree/linkedList/linkedlist.h
 
-src/compress/parse_tree_file.c
-src/compress/parse_tree_file.h
+compress/parse_tree_file.c
+compress/parse_tree_file.h
 
-src/compress/compress_file.c
-src/compress/compress_file.h
+compress/compress_file.c
+compress/compress_file.h
 
-src/IO/bit_input/bit_io.h
-src/IO/bit_input/bit_io.c
+IO/bit_input/bit_io.h
+IO/bit_input/bit_io.c
