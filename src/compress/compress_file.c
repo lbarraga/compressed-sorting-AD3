@@ -9,12 +9,8 @@
 #include "compress.h"
 
 
-int ceilLog2(const int* lineLength) {
-    int lineLengthLength = 0;
-    while (*lineLength >> lineLengthLength) {
-        lineLengthLength++;
-    }
-    return lineLengthLength;
+inline int ceilLog2(const int* lineLength) {
+    return sizeof(int) * 8 - __builtin_clz(*lineLength);
 }
 
 
