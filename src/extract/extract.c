@@ -35,7 +35,7 @@ void extract(const char *inputFilePath, const char *outputFilePath, int bufferSi
     long headerPosition = consumeLong(inputFile);
     PrefixTree* prefixTree = buildPrefixTreeFromHeader(inputFile, headerPosition);
 
-    consumeLong(inputFile); // amount of lines not needed
+    long amountOfLines = consumeLong(inputFile); // amount of lines not needed
     uint8_t lastByteBitCount = consumeUint8_t(inputFile); // amount of bits that are not filler bits in the last byte
     consumeUint8_t(inputFile); // same for header, but not line positions are not needed in extract
     printf("%d\n", lastByteBitCount);
@@ -53,7 +53,7 @@ void extract(const char *inputFilePath, const char *outputFilePath, int bufferSi
 
     // last uint64, does not need to iterate over the whole 64 bit
     if (fread(&buffer, sizeof(uint64_t), 1, inputFile)) {
-        for (int bitPosition = 63; bitPosition >= 64 - lastByteBitCount; --bitPosition) {
+        for (int bitPosition = 63; bitPosition >= 63 - lastByteBitCount + 1; --bitPosition) {
             int bitValue = (int) (buffer >> bitPosition) & 1; // Extract the bit value
             decode(decoder, bitValue, outputFile);
         }

@@ -10,6 +10,7 @@ Decoder* createDecoder(PrefixTree* prefixTree) {
     Decoder* decoder = malloc(sizeof(Decoder));
     decoder->prefixTree = prefixTree;
     decoder->current = prefixTree->root;
+    decoder->linesDecoded = 0;
     return decoder;
 }
 
@@ -28,5 +29,8 @@ void decode(Decoder* decoder, int bit, FILE* outputStream) {
     if(isLeafNode(decoder->current)) {
         fputc(decoder->current->character, outputStream);
         decoder->current = decoder->prefixTree->root;
+        if (decoder->current->character == '\n') {
+            decoder->linesDecoded++;
+        }
     }
 }

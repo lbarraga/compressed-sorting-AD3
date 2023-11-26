@@ -10,6 +10,7 @@
 typedef struct Decoder {
     PrefixTree* prefixTree;
     PrefixNode* current;
+    long linesDecoded; // then number of lines decoded.
 } Decoder;
 
 Decoder* createDecoder(PrefixTree* prefixTree);

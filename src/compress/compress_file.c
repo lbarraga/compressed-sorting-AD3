@@ -8,14 +8,27 @@
 #include "../IO/bit_input/bit_io.h"
 #include "compress.h"
 
+void addTreeToHeader(FILE* file, int charCount, OPC** codes) {
+    fprintf(file, "%d ", charCount);
+    for (int i = 0; i < 128; ++i) {
+        OPC* code = codes[i];
+        if (code) {
+            fprintf(file, "%d ", i);
+            for (int j = code->length - 1; j >= 0; --j) {
+                fprintf(file, "%lu", (code->code >> j) & 1); // TODO hier ook uint64 voor gebruiken
+            }
+            fprintf(file, " ");
+        }
+    }
+}
 
-inline int ceilLog2(const int* lineLength) {
-    return sizeof(int) * 8 - __builtin_clz(*lineLength);
+int ceilLog2(const int* lineLength) {
+    return (int) sizeof(int) * 8 - __builtin_clz(*lineLength);
 }
 
 
-// TODO codes niet als strings, lines byte aligned!!!!!!!!!!!!!!!!!!!
 void compressFile(const char *inputFileName, const char *outputFileName, int bufferSize, OPC** codes, int charCount) {
+
     FILE* inputFile = fopen(inputFileName, "r");
     FILE* outputFile = fopen(outputFileName, "w");
     FILE* headerTempFile = tmpfile();
@@ -26,41 +39,31 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
     BitOutputHandler outputHandlerOutput = createOutputHandler(outputFile, bufferSize / 2);
     BitOutputHandler outputHandlerHeader = createOutputHandler(headerTempFile, 8);
 
-    // 8: header pointer, 8: amount of lines, 1: significant bits is last byte of encoding, 1: idem for header
+    // 8: header pointer, 8: amount of lines, 1: significant bits is last byte of encoding, 1: idem but for header
     uint8_t padding[8 + 8 + 1 + 1] = {0};
     fwrite(&padding, sizeof(uint8_t), sizeof(padding), outputFile);
 
     // include tree in the header of the file
-    fprintf(headerTempFile, "%d ", charCount);
-    for (int i = 0; i < 128; ++i) {
-        OPC* code = codes[i];
-        if (code) {
-            fprintf(headerTempFile, "%d ", i);
-            for (int j = code->length - 1; j >= 0; --j) {
-                fprintf(headerTempFile, "%lu", (code->code >> j) & 1);
-            }
-            fprintf(headerTempFile, " ");
-        }
-    }
+    addTreeToHeader(headerTempFile, charCount, codes);
 
     clock_t start = clock();
     // Encode characters and write to file
     int lineLength = 0;
     long totalLines = 0;
     size_t bytesRead;
-    while ((bytesRead = fread(inputBuffer, 1, sizeof(inputBuffer), inputFile)) > 0) {
+    while ((bytesRead = fread(inputBuffer, 1, bufferSize / 2, inputFile)) > 0) {
         for (size_t i = 0; i < bytesRead; ++i) {
             // write the bits of the code to the output file
             unsigned char ch = inputBuffer[i];
             OPC* code = codes[ch];
-            outputBitString(&outputHandlerOutput, code->code, code->length);
+            outputNBits(&outputHandlerOutput, code->code, code->length);
             lineLength += code->length;
 
             if (ch == '\n') {
                 // output the 5 bits allocated for the length of the length
                 int lineLengthLength = ceilLog2(&lineLength); // will be less than 2^5 = 32
-                outputBitString(&outputHandlerHeader, lineLengthLength, 5);
-                outputBitString(&outputHandlerHeader, lineLength - 1, lineLengthLength);
+                outputNBits(&outputHandlerHeader, lineLengthLength, 5);
+                outputNBits(&outputHandlerHeader, lineLength - 1, lineLengthLength);
                 lineLength = 0;
                 totalLines++;
             }
@@ -100,8 +103,8 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
 
     // cleanup
     fclose(outputFile);
-    freeOutputHandler(outputHandlerOutput);
-    freeOutputHandler(outputHandlerHeader);
+    freeOutputHandler(&outputHandlerOutput);
+    freeOutputHandler(&outputHandlerHeader);
 
     end = clock();
     printf("time taken: %f\n", (double) (end - start) / 1000000);

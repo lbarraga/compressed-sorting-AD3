@@ -11,18 +11,17 @@
 #include "../../compress/compress.h"
 
 typedef struct BitOutputHandler {
-    uint64_t* buffer; // the buffer of k bytes
+    uint64_t* buffer;
     size_t size;
-    size_t bytesWritten; // amount of full bytes written
-    int bitsWritten;       // amount of bits written in the current byte
-    FILE* outputStream;    // stream to write to when buffer is full
-    int elementSizeBits;  // size of a single element in the buffer in bytes
-    int elementSizeBytes; // idem but in bits
+    size_t elementsWritten; // amount of full elements written
+    int bitsWritten;        // amount of bits written in the current element
+    FILE* outputStream;     // stream to write to when buffer is full
 } BitOutputHandler;
 
-BitOutputHandler createOutputHandler(FILE* file, size_t size, size_t elementSize);
-void outputBitString(BitOutputHandler* handler, uint64_t bits, int length);
+BitOutputHandler createOutputHandler(FILE* file, size_t size);
+void outputNBits(BitOutputHandler* handler, uint64_t bits, int length);
 void flushBits(BitOutputHandler* handler);
-void freeOutputHandler(BitOutputHandler handler);
+void printByte(uint8_t byte);
+void freeOutputHandler(BitOutputHandler* handler);
 
 #endif //PROJECTAD3_BIT_IO_H

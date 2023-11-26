@@ -7,59 +7,59 @@
 #include <string.h>
 #include "bit_io.h"
 
-BitOutputHandler createOutputHandler(FILE* file, size_t size_bytes, size_t elementSize) {
-    size_t bufferLength = size_bytes / elementSize;
+#define BITS_IN_UINT64_T 64
+
+BitOutputHandler createOutputHandler(FILE* file, size_t size_bytes) {
+    size_t bufferLength = size_bytes / sizeof(uint64_t);
     BitOutputHandler handler;
-    handler.buffer = calloc(bufferLength, elementSize);
-    handler.elementSizeBytes = (int) elementSize;
-    handler.elementSizeBits = (int) elementSize;
+    handler.buffer = calloc(bufferLength, sizeof(uint64_t));
     handler.size = bufferLength;
-    handler.bytesWritten = 0;
+    handler.elementsWritten = 0;
     handler.bitsWritten = 0;
     handler.outputStream = file;
     return handler;
 }
 
-void freeOutputHandler(BitOutputHandler handler) {
-    free(handler.buffer);
+void freeOutputHandler(BitOutputHandler* handler) {
+    free(handler->buffer);
 }
 
-//void printByte(uint64_t byte) {
-//    for (int i = N_BITS_UINT64 - 1; i >= 0; --i) {
-//        printf("%lu", (byte >> i) & 1);
-//    }
-//}
+void printByte(uint8_t byte) {
+    for (int i = 8 - 1; i >= 0; --i) {
+        printf("%u", (byte >> i) & 1);
+    }
+    printf("\n");
+}
 
 void outputNBits(BitOutputHandler* handler, uint64_t bits, int length) {
-    if (handler->bitsWritten == handler->elementSizeBits) {
-        handler->bytesWritten++;
+    // The number of bits exceeds the element's capacity, requiring multiple writes.
+    int freeBits = BITS_IN_UINT64_T - handler->bitsWritten;
+    if (length > freeBits) {
+        outputNBits(handler, bits >> (length - freeBits), freeBits); // recursive call
+        length -= freeBits;
+    }
+
+    // current element is full
+    if (handler->bitsWritten == BITS_IN_UINT64_T) {
+        handler->elementsWritten++;
         handler->bitsWritten = 0;
     }
-    if (handler->bytesWritten == handler->size) {
-        fwrite(handler->buffer, handler->elementSizeBytes, handler->size, handler->outputStream);
-        memset(handler->buffer, 0, handler->size * handler->elementSizeBytes);
-        handler->bytesWritten = 0;
+
+    // Whole buffer is full; output buffer to file
+    if (handler->elementsWritten == handler->size) {
+        fwrite(handler->buffer, sizeof(uint64_t), handler->size, handler->outputStream);
+        memset(handler->buffer, 0, handler->size * sizeof(uint64_t));
+        handler->elementsWritten = 0;
     }
-    handler->buffer[handler->bytesWritten] |= bits << (handler->elementSizeBits - handler->bitsWritten - length);
+
+    handler->buffer[handler->elementsWritten] |= bits << (BITS_IN_UINT64_T - handler->bitsWritten - length);
     handler->bitsWritten += length;
 }
 
-void outputBitString(BitOutputHandler* handler, uint64_t bits, int length) {
-    int firstChunkMax = handler->elementSizeBits - handler->bitsWritten;
-
-    if (length <= firstChunkMax) {
-        outputNBits(handler, bits, length);
-        return;
-    }
-
-    outputNBits(handler, bits >> (length - firstChunkMax), firstChunkMax);
-    outputNBits(handler, bits, length - firstChunkMax);
-
-}
 
 void flushBits(BitOutputHandler* handler) {
     // [<el size>]
     // [101...011] [001...110] ... [110...???] ... [000...000]
     //                           ^bytes written^
-    fwrite(handler->buffer, handler->elementSizeBytes, handler->bytesWritten + 1, handler->outputStream);
+    fwrite(handler->buffer, sizeof(uint64_t), handler->elementsWritten + 1, handler->outputStream);
 }
