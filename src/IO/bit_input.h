@@ -10,11 +10,15 @@
 typedef struct BitInputHandler {
     uint64_t* buffer;
     size_t size;
-    size_t elementsToRead;
+    size_t elementsRead;
     int bitsRead;
     FILE* inputStream;
 } BitInputHandler;
 
+BitInputHandler createBitInputHandler(FILE* file, size_t size_bytes);
+void freeBitInputHandler(BitInputHandler* handler);
+uint64_t readNBits(BitInputHandler* handler, int nBits);
+void printUint64t(uint64_t byte);
 
 
 #endif //PROJECTAD3_BIT_INPUT_H
