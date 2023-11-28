@@ -17,7 +17,11 @@ typedef struct BitInputHandler {
 
 BitInputHandler createBitInputHandler(FILE* file, size_t size_bytes);
 void freeBitInputHandler(BitInputHandler* handler);
+void setInputHandlerAt(BitInputHandler* handler, long bytePosition);
+
 uint64_t readNBits(BitInputHandler* handler, int nBits);
+int readLength(BitInputHandler* handler);
+
 void printUint64t(uint64_t byte);
 
 

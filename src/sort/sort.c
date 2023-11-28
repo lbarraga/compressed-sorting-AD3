@@ -7,6 +7,7 @@
 #include "sort.h"
 #include "../IO/bit_input.h"
 #include "../IO/bit_input/bit_io.h"
+#include "heap_sort.h"
 
 int readNextBit(unsigned char* byteBuffer, int* bitsReadFromBuffer, FILE* file) {
     if (*bitsReadFromBuffer == 8) {
@@ -41,6 +42,9 @@ void skipTree(FILE* inputFile) {
 
 void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize) {
 
+    testHeap();
+
+    return;
     FILE* inputFile = fopen(inputFilePath, "rb");
     FILE* outputFile = fopen(outputFilePath, "wb");
     FILE* headerPointer = fopen(inputFilePath, "rb");
@@ -53,6 +57,7 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
 
     fseek(headerPointer, headerPosition, SEEK_SET); // set headerPointer
     skipTree(headerPointer);
+    long lineLengthsStart = ftell(headerPointer);
 
     BitInputHandler inputHandler = createBitInputHandler(inputFile, 8);
     BitInputHandler headerHandler = createBitInputHandler(headerPointer, 8);
@@ -64,26 +69,45 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     size_t uint64sRead = fread(inputBuffer, sizeof(uint64_t), bufferSize / sizeof(uint64_t), inputFile);
 
 
+    // Read through the lineLengths to determine the required number of Interval structs to allocate.
+    // Stop when we have read more than `bufferSize` * 8 bits or there are no more lines to read.
     long start = 0;
-    for (int i = 0; i < 4; ++i) {
-        uint64_t ll = readNBits(&headerHandler, 5);
-        uint64_t l = readNBits(&headerHandler, ll);
-        LineInterval interval = {
-                .start = start,
-                .length = ll
-        };
-
-        printf("ll = %lu\n", ll);
-        printf("l = %lu\n", l);
+    long lines = 0;
+    while (lines < amountOfLines && start < bufferSize * 8) {
+        start += readLength(&headerHandler);
+        lines += 1;
     }
 
+    LineInterval* lineIntervals = malloc(sizeof(LineInterval) * lines);
+    setInputHandlerAt(&headerHandler, lineLengthsStart);
+
     // Stap 2: maak een struct voor elke lijn.
+    start = 0;
+    for (int i = 0; i < lines; ++i) {
+        int lineLength = readLength(&headerHandler);
+        lineIntervals[i].start = start;
+        lineIntervals[i].length = lineLength;
+        start += lineLength;
+    }
+
+    for (int i = 0; i < lines; ++i) {
+        printf("line %d: start: %ld, length: %d\n", i, lineIntervals[i].start, lineIntervals[i].length);
+    }
+
+    // stap 3: sorteer de structs
+
+
+
+    printf("start = %ld, num lines: %ld\n", start, amountOfLines);
+
+
 
 
 
     // Cleanup
     freeBitInputHandler(&headerHandler);
     freeBitInputHandler(&inputHandler);
+    free(inputBuffer);
 
     fclose(inputFile);
     fclose(outputFile);
