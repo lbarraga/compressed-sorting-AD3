@@ -24,27 +24,39 @@ void outputLineInterval(const LineInterval* lineInterval, const uint64_t* bits, 
     long s = lineInterval->start;
     long e = lineInterval->start + lineInterval->length;
 
-    if (lineInterval->start == 0) {
-        printf("!! start = %ld, length = %d\n", lineInterval->start, lineInterval->length);
-    }
-
+    printf("start = %ld, length = %d\n", lineInterval->start, lineInterval->length);
+    printf("s / 64 = %ld en e / 64 = %ld\n", s / 64, e / 64);
     int toTake = 64 - (int) (s % 64);
     while (s / 64 != e / 64) {
-        if (lineInterval->start == 0) {
-            printf("!! in, toTake = %d\n", toTake);
-        }
+        printf("in, toTake = %d\n", toTake);
+
         uint64_t extracted = extractInterval(bits[s / 64], 64 - toTake ,toTake);
-        if (lineInterval->start == 0) {
-            printUint64t(bits[s / 64]);
-            printUint64t(extracted);
-        }
+        printUint64t(extracted);
         outputNBits(handler, extracted, toTake);
         s += toTake;
         toTake = 64;
     }
 
-    uint64_t extracted = extractInterval(bits[s / 64], (int) s % 64, (int) (e - s));
-    outputNBits(handler, extracted, (int) (e - s));
+    int last = (int) (e - s);
+    if (last == 0) {
+        return;
+    }
+
+    printf("e - s = %lu\n", e-s);
+    uint64_t extracted = extractInterval(bits[s / 64], (int) s % 64, last);
+    printUint64t(extracted);
+    outputNBits(handler, extracted, last);
+}
+
+void outputLineInterval2(const LineInterval* lineInterval, uint64_t* bits, BitOutputHandler* handler) {
+    long s = lineInterval->start;
+    long e = lineInterval->start + lineInterval->length;
+
+    while (s != e) {
+        uint64_t bit = getBit(bits[s / 64], s % 64);
+        outputNBits(handler, bit, 1);
+        s++;
+    }
 }
 
 void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize) {
@@ -75,10 +87,12 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     // Read through the lineLengths to determine the required number of Interval structs to allocate.
     // Stop when we have read more than `bufferSize` * 8 bits or there are no more lines to read.
     long start = 0;
-    long lines = 0;
-    while (lines < amountOfLines && start < (long) uint64sRead * 64) {
-        start += readLength(&headerHandler) + 1; // TODO uitleggen waarom +1
+    long lines = -1;
+    int length = 0;
+    while (lines < amountOfLines && start + length < (long) uint64sRead * 64) {
+        start += length; // TODO uitleggen waarom +1
         lines += 1;
+        length = readLength(&headerHandler) + 1;
     }
 
     LineInterval* lineIntervals = malloc(sizeof(LineInterval) * lines);
@@ -94,7 +108,7 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     }
 
     for (int i = 0; i < lines; ++i) {
-        printf("line %d: start: %ld, length: %d\n", i, lineIntervals[i].start, lineIntervals[i].length);
+        //printf("line %d: start: %ld, length: %d\n", i, lineIntervals[i].start, lineIntervals[i].length);
     }
 
     // stap 3: sorteer de structs
@@ -102,7 +116,7 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
 
     printf("=========================\n");
     for (int i = 0; i < lines; ++i) {
-        printf("line %d: start: %ld, length: %d\n", i, lineIntervals[i].start, lineIntervals[i].length);
+        //printf("line %d: start: %ld, length: %d\n", i, lineIntervals[i].start, lineIntervals[i].length);
     }
 
     // stap 4: uitschrijven naar de file
@@ -116,9 +130,9 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     fwrite(&significantBitsHeader, sizeof(uint8_t), 1, outputFile);
 
 
-    BitOutputHandler outputHandler = createOutputHandler(outputFile, 64);
+    BitOutputHandler outputHandler = createOutputHandler(outputFile, 8);
     for (int i = 0; i < lines; ++i) {
-        outputLineInterval(&lineIntervals[i], inputBuffer, &outputHandler);
+        outputLineInterval2(&lineIntervals[i], inputBuffer, &outputHandler);
     }
 
     flushBits(&outputHandler);
