@@ -27,16 +27,31 @@ void printUint64t(uint64_t byte) {
     printf("\n");
 }
 
-void setInputHandlerAt(BitInputHandler* handler, long bytePosition) {
-    fseek(handler->inputStream, bytePosition, SEEK_SET);
+InputHandlerPosition getInputPosition(BitInputHandler* handler) {
+    size_t bufferEnd = ftell(handler->inputStream);
+    InputHandlerPosition position = {
+            .element = bufferEnd - (handler->size - handler->elementsRead) * 8,
+            .bit = handler->bitsRead
+    };
+    return position;
+}
+
+void setAtInputPosition(BitInputHandler* handler, InputHandlerPosition* position) {
+    fseek(handler->inputStream, position->element, SEEK_SET);
     handler->bitsRead = 0;
     handler->elementsRead = handler->size; // next time bits are read, the buffer is loaded at the new position.
+    readNBits(handler, position->bit);
+}
+
+void setInputHandlerAt(BitInputHandler* handler, long bytePosition) {
+
+
 }
 
 int readLength(BitInputHandler* handler) {
     int ll = (int) readNBits(handler, 5);
     int l = (int) readNBits(handler, ll);
-    return l;
+    return l + 1; // TODO uitleggen waarom +1
 }
 
 uint64_t readNBits(BitInputHandler* handler, int nBits) {

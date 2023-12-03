@@ -8,4 +8,11 @@ ll[5 bits] l[ll bits] [l bits]
 
 bv:
 
-00101[5 bits -> 5] 10101[5 bits -> 21] [21 bits]
+00101[5 bits -> 5] 10101[5 bits -> 21] [21 bits]3
+
+
+
+zeggen waarom het toevoegen van lengtes wel of niet goed was qua performantie.
+realloc is mss niet het beste want da kan ff dubbel zoveel geheugen gebruiken
+lijnlengtes in de heqder opslqqn heeft voordelen: super snel de lengtes weten om aantal lijnen in blok te weten,
+we willen ook niet decompressen in ons sort.

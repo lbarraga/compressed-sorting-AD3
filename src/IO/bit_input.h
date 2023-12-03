@@ -15,9 +15,16 @@ typedef struct BitInputHandler {
     FILE* inputStream;
 } BitInputHandler;
 
+typedef struct InputHandlerPosition {
+    size_t element;
+    int bit;
+} InputHandlerPosition;
+
+InputHandlerPosition getInputPosition(BitInputHandler* handler);
+
 BitInputHandler createBitInputHandler(FILE* file, size_t size_bytes);
 void freeBitInputHandler(BitInputHandler* handler);
-void setInputHandlerAt(BitInputHandler* handler, long bytePosition);
+void setAtInputPosition(BitInputHandler* handler, InputHandlerPosition* position);
 
 uint64_t readNBits(BitInputHandler* handler, int nBits);
 int readLength(BitInputHandler* handler);

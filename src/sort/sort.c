@@ -59,84 +59,122 @@ void outputLineInterval2(const LineInterval* lineInterval, uint64_t* bits, BitOu
     }
 }
 
-void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize) {
-    // TODO het kan zijn da die consumeWhitespace op het einde van de tree een stuk van de uint64 opeet.
-    FILE* inputFile = fopen(inputFilePath, "rb");
-    FILE* outputFile = fopen(outputFilePath, "wb");
-    FILE* headerPointer = fopen(inputFilePath, "rb");
-
-    long headerPosition = consumeLong(inputFile);
-    long amountOfLines = consumeLong(inputFile);
-    uint8_t significantBitsCodes = consumeUint8_t(inputFile); // amount of bits that are not filler bits in the last byte
-    uint8_t significantBitsHeader = consumeUint8_t(inputFile); // same for header, but not line positions are not needed in extract
-
-    fseek(headerPointer, headerPosition, SEEK_SET); // set headerPointer
-    skipTree(headerPointer);
-    long lineLengthsStart = ftell(headerPointer);
-
-    BitInputHandler inputHandler = createBitInputHandler(inputFile, 8);
-    BitInputHandler headerHandler = createBitInputHandler(headerPointer, 8);
-
-    printf("the header position is %lu\n", headerPosition);
-
-    // Stap 1: laadt m geheugen in.
-    uint64_t* inputBuffer = malloc(bufferSize);
-    size_t uint64sRead = fread(inputBuffer, sizeof(uint64_t), bufferSize / sizeof(uint64_t), inputFile);
-
-
+// TODO hier kan je ook stoppen wanneer de intervallen over de helft gaan zitten.
+BlockCalculation calculateAmountOfLinesInBlock(long totalLinesRead, long startBits, long totalLines, size_t maxBitsInBlock, BitInputHandler* headerHandler) {
     // Read through the lineLengths to determine the required number of Interval structs to allocate.
-    // Stop when we have read more than `bufferSize` * 8 bits or there are no more lines to read.
-    long start = 0;
-    long lines = -1;
-    int length = 0;
-    while (lines < amountOfLines && start + length < (long) uint64sRead * 64) {
-        start += length; // TODO uitleggen waarom +1
-        lines += 1;
-        length = readLength(&headerHandler) + 1;
+
+    InputHandlerPosition position = getInputPosition(headerHandler);
+
+    BlockCalculation calc = {.amountOfLines = 0, .bits = startBits};
+    int length = readLength(headerHandler);
+    while (totalLinesRead + calc.amountOfLines < totalLines && calc.bits + length < (long) maxBitsInBlock) {
+        //printf("readLength = %d\n", length);
+        calc.bits += length;
+        calc.amountOfLines++;
+        length = readLength(headerHandler);
     }
 
-    LineInterval* lineIntervals = malloc(sizeof(LineInterval) * lines);
-    setInputHandlerAt(&headerHandler, lineLengthsStart);
+    setAtInputPosition(headerHandler, &position); // Functie moet idempotent blijven
 
-    // Stap 2: maak een struct voor elke lijn.
-    start = 0;
-    for (int i = 0; i < lines; ++i) {
-        int lineLength = readLength(&headerHandler) + 1;
+    return calc;
+}
+
+long sortBlock(uint64_t* bits, long start, BitInputHandler* headerHandler, BitOutputHandler* outputHandler, long linesInBlock) {
+
+    LineInterval* lineIntervals = malloc(sizeof(LineInterval) * linesInBlock);
+    //printf("lines in block = %lu\n", linesInBlock);
+    // Maak een struct voor elke lijn.
+    for (int i = 0; i < linesInBlock; ++i) {
+        int lineLength = readLength(headerHandler);
         lineIntervals[i].start = start;
         lineIntervals[i].length = lineLength;
         start += lineLength;
     }
 
-    for (int i = 0; i < lines; ++i) {
-        //printf("line %d: start: %ld, length: %d\n", i, lineIntervals[i].start, lineIntervals[i].length);
+//    printf("===========================\n");
+//    for (int i = 0; i < linesInBlock; ++i) {
+//        printf("start = %lu, length = %d\n", lineIntervals[i].start, lineIntervals[i].length);
+//    }
+//    printf("===========================\n");
+
+    // Sorteer de structs
+    heapSort(lineIntervals, linesInBlock, bits);
+
+//    printf("===========================\n");
+//    for (int i = 0; i < linesInBlock; ++i) {
+//        printf("start = %lu, length = %d\n", lineIntervals[i].start, lineIntervals[i].length);
+//    }
+//    printf("===========================\n");
+
+    // Schrijf de gesorteerde structs uit naar het tijdelijke blok bestand.
+    for (int i = 0; i < linesInBlock; ++i) {
+        outputLineInterval2(&lineIntervals[i], bits, outputHandler);
     }
 
-    // stap 3: sorteer de structs
-    heapSort(lineIntervals, lines, inputBuffer);
+    free(lineIntervals);
 
-    printf("=========================\n");
-    for (int i = 0; i < lines; ++i) {
-        //printf("line %d: start: %ld, length: %d\n", i, lineIntervals[i].start, lineIntervals[i].length);
-    }
+    return start;
+}
 
-    // stap 4: uitschrijven naar de file
+void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize) {
+    // TODO het kan zijn da die consumeWhitespace op het einde van de tree een stuk van de uint64 opeet.
+    FILE* inputFile = fopen(inputFilePath, "rb");
+    FILE* headerPointer = fopen(inputFilePath, "rb");
+    FILE* blockTempFile = tmpfile();
+    FILE* outputFile = fopen(outputFilePath, "wb");
+
+    long headerPosition = consumeLong(inputFile);
+    long totalLines = consumeLong(inputFile);
+    uint8_t significantBitsCodes = consumeUint8_t(inputFile); // amount of bits that are not filler bits in the last byte
+    uint8_t significantBitsHeader = consumeUint8_t(inputFile); // same for header, but not line positions are not needed in extract
+
+    fseek(headerPointer, headerPosition, SEEK_SET); // set headerPointer
+    skipTree(headerPointer);
+    long lineLengthsStart = ftell(headerPointer); // TODO zou uiteindelijk weg moeten
+
+    BitInputHandler inputHandler = createBitInputHandler(inputFile, 8);
+    BitInputHandler headerHandler = createBitInputHandler(headerPointer, 8);
+
+    BitOutputHandler outputHandler = createOutputHandler(outputFile, 8);
+    BitOutputHandler blokFileOutputHandler = createOutputHandler(blockTempFile, 8);
+
+    printf("the header position is %lu\n", headerPosition);
+    long nBlockPointers = 0;
+//    BlockPointer* blockPointers = malloc(sizeof(BlockPointer) * 1);
+
+    // uitschrijven naar de file TODO dit moet eigenlijk pas op het einde gebeuren net voor de merge
     // Fill in padding with info
     fseek(outputFile, 0, SEEK_SET);
     fwrite(&headerPosition, sizeof(long), 1, outputFile);
-    fwrite(&amountOfLines, sizeof(long), 1, outputFile);
+    fwrite(&totalLines, sizeof(long), 1, outputFile);
 
     // amount of significant bits in the last byte
     fwrite(&significantBitsCodes, sizeof(uint8_t), 1, outputFile);
     fwrite(&significantBitsHeader, sizeof(uint8_t), 1, outputFile);
 
+    // Stap 1: laad nItems geheugen in.
+    uint64_t* inputBuffer = malloc(bufferSize);
 
-    BitOutputHandler outputHandler = createOutputHandler(outputFile, 8);
-    for (int i = 0; i < lines; ++i) {
-        outputLineInterval2(&lineIntervals[i], inputBuffer, &outputHandler);
+    size_t nItems = bufferSize / sizeof(uint64_t);
+    size_t maxBitsInBlock = nItems * 64;
+
+    printf("total lines: %ld\n", totalLines);
+
+    long totalLinesRead = 0;
+    long start = 0;
+    BlockCalculation blockCalc = calculateAmountOfLinesInBlock(totalLinesRead, start, totalLines, maxBitsInBlock, &headerHandler);
+    while (blockCalc.amountOfLines > 0) {
+        //printf("lines in next block = %lu, bits=%lu, start= %lu\n", blockCalc.amountOfLines, blockCalc.bits, start);
+        fread(inputBuffer, sizeof(uint64_t), blockCalc.bits / 64 + 1, inputFile);
+        totalLinesRead += blockCalc.amountOfLines;
+        sortBlock(inputBuffer, start, &headerHandler, &outputHandler, blockCalc.amountOfLines);
+        fseek(inputFile, -8, SEEK_CUR);
+        start = blockCalc.bits % 64;
+        blockCalc = calculateAmountOfLinesInBlock(totalLinesRead, start, totalLines, maxBitsInBlock, &headerHandler);
     }
 
     flushBits(&outputHandler);
-    printf("start = %ld, num lines: %ld\n", start, amountOfLines);
+    printf("start = %ld, num lines: %ld\n", start, totalLines);
 
     // Tree
     fseek(headerPointer, headerPosition, SEEK_SET); // set headerPointer
@@ -152,9 +190,9 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     freeBitInputHandler(&headerHandler);
     freeBitInputHandler(&inputHandler);
     freeOutputHandler(&outputHandler);
+    freeOutputHandler(&blokFileOutputHandler);
 
     free(inputBuffer);
-    free(lineIntervals);
     free(tree);
 
     fclose(inputFile);
