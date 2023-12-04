@@ -13,6 +13,7 @@ BitInputHandler createBitInputHandler(FILE* file, size_t size_bytes) {
     handler.elementsRead = bufferLength;
     handler.bitsRead = 0;
     handler.inputStream = file;
+    handler.filePosition = ftell(file);
     return handler;
 }
 
@@ -37,15 +38,12 @@ InputHandlerPosition getInputPosition(BitInputHandler* handler) {
 }
 
 void setAtInputPosition(BitInputHandler* handler, InputHandlerPosition* position) {
-    fseek(handler->inputStream, position->element, SEEK_SET);
+    long offset = (long) position->element;
+    fseek(handler->inputStream, offset, SEEK_SET);
+    handler->filePosition = offset;
     handler->bitsRead = 0;
     handler->elementsRead = handler->size; // next time bits are read, the buffer is loaded at the new position.
     readNBits(handler, position->bit);
-}
-
-void setInputHandlerAt(BitInputHandler* handler, long bytePosition) {
-
-
 }
 
 int readLength(BitInputHandler* handler) {
@@ -62,7 +60,9 @@ uint64_t readNBits(BitInputHandler* handler, int nBits) {
     }
 
     if (handler->elementsRead == handler->size) {
+        fseek(handler->inputStream, handler->filePosition, SEEK_SET);
         fread(handler->buffer, sizeof(uint64_t), handler->size, handler->inputStream);
+        handler->filePosition = ftell(handler->inputStream);
         handler->elementsRead = 0;
     }
 

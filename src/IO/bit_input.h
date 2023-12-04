@@ -13,6 +13,7 @@ typedef struct BitInputHandler {
     size_t elementsRead;
     int bitsRead;
     FILE* inputStream;
+    long filePosition; // keep file position to mitigate changes from other input readers
 } BitInputHandler;
 
 typedef struct InputHandlerPosition {

@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include "linkedlist.h"
 
-// Initialize a linked list with one element and return its head
 Node* initLinkedList(int initialData) {
     Node* newNode = (Node*) malloc(sizeof(Node));
     newNode->data = initialData;
@@ -14,7 +13,11 @@ Node* initLinkedList(int initialData) {
     return newNode;
 }
 
-// Add an element to the end of the linked list
+Node* initEmptyLinkedList() {
+    return NULL; // Returns a NULL pointer, indicating an empty list.
+}
+
+
 void append(Node** headRef, int data) {
     Node* newNode = (Node*) malloc(sizeof(Node));
     newNode->data = data;
@@ -32,7 +35,7 @@ void append(Node** headRef, int data) {
     lastNode->next = newNode;
 }
 
-// Add all elements from srcList to destList
+
 void addList(Node** destList, Node* srcList) {
     while (srcList != NULL) {
         append(destList, srcList->data);
@@ -40,7 +43,6 @@ void addList(Node** destList, Node* srcList) {
     }
 }
 
-// Delete the node at the given index
 void deleteAtIndex(Node** headRef, int index) {
     if (*headRef == NULL) {
         return;
@@ -48,37 +50,54 @@ void deleteAtIndex(Node** headRef, int index) {
 
     Node* temp = *headRef;
 
-    // If head needs to be removed
     if (index == 0) {
         *headRef = temp->next;
         free(temp);
         return;
     }
 
-    // Find the node before the node to be deleted
     int i = 0;
     while (i < index - 1 && temp) {
         temp = temp->next;
         ++i;
     }
 
-    // If the index is out of bounds
     if (temp == NULL || temp->next == NULL) {
         return;
     }
 
-    // Node temp->next is the node to be deleted
-    // Store pointer to the next of node to be deleted
     Node* nextNode = temp->next->next;
 
-    // Unlink the node from the linked list and free it
     free(temp->next);
     temp->next = nextNode;
 }
 
+int getLength(Node* head) {
+    int length = 0;
+    Node* current = head;
+
+    while (current != NULL) {
+        length++;
+        current = current->next;
+    }
+
+    return length;
+}
+
+int* toArray(Node* head) {
+    int length = getLength(head);
+    int* array = malloc(sizeof(int) * length);
+
+    Node* current = head;
+    for (int i = 0; i < length; i++) {
+        array[i] = current->data;
+        current = current->next;
+    }
+
+    return array;
+}
 
 
-// Free the memory allocated for the linked list
 void freeLinkedList(Node* head) {
     Node* tmp;
 

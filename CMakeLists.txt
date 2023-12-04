@@ -36,7 +36,7 @@ add_executable(projectAD3
 
         src/IO/bit_input/bit_io.c
         src/IO/bit_input/bit_io.h
-        src/IO/bit_input.c src/IO/bit_input.h src/extract/prefix_tree.h src/extract/prefix_tree.c src/extract/prefix_node.c src/extract/prefix_node.h src/extract/decoder.c src/extract/decoder.h src/sort/heap_sort.c src/sort/heap_sort.h)
+        src/IO/bit_input.c src/IO/bit_input.h src/extract/prefix_tree.h src/extract/prefix_tree.c src/extract/prefix_node.c src/extract/prefix_node.h src/extract/decoder.c src/extract/decoder.h src/sort/heap_sort.c src/sort/heap_sort.h src/sort/block_merge.c src/sort/block_merge.h)
 
 target_link_libraries(projectAD3 m)
 

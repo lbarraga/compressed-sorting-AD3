@@ -13,9 +13,12 @@ typedef struct Node {
 
 
 Node* initLinkedList(int initialData);
+Node* initEmptyLinkedList();
 void append(Node** headRef, int data);
 void addList(Node** destList, Node* srcList);
 void freeLinkedList(Node* head);
+int* toArray(Node* head);
 void deleteAtIndex(Node** headRef, int index);
+int getLength(Node* head);
 
 #endif //PROJECTAD3_LINKEDLIST_H
