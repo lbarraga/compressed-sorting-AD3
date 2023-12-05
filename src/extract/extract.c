@@ -28,7 +28,6 @@ PrefixTree* buildPrefixTreeFromHeader(FILE* inputFile, long headerPosition) {
 }
 
 void extract(const char *inputFilePath, const char *outputFilePath, int bufferSize) {
-    printf("%d", bufferSize); //TODO
     FILE* inputFile = fopen(inputFilePath, "r");
     FILE* outputFile = fopen(outputFilePath, "w");
 
@@ -38,7 +37,6 @@ void extract(const char *inputFilePath, const char *outputFilePath, int bufferSi
     long amountOfLines = consumeLong(inputFile); // amount of lines not needed
     uint8_t lastByteBitCount = consumeUint8_t(inputFile); // amount of bits that are not filler bits in the last byte
     consumeUint8_t(inputFile); // same for header, but not line positions are not needed in extract
-    printf("%d\n", lastByteBitCount);
 
     // encode the file
     uint64_t buffer; // TODO hier een grote buffer van maken

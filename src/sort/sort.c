@@ -137,7 +137,7 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     BitOutputHandler blokFileOutputHandler = createOutputHandler(blockTempFile, 8);
     BitOutputHandler headerOutputHandler = createOutputHandler(headerTempFile, 8);
 
-    printf("the header position is %lu\n", headerPosition);
+//    printf("the header position is %lu\n", headerPosition);
 
     // uitschrijven naar de file TODO dit moet eigenlijk pas op het einde gebeuren net voor de merge
     // Fill in padding with info
@@ -155,17 +155,18 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     size_t nItems = bufferSize / sizeof(uint64_t);
     size_t maxBitsInBlock = nItems * 64;
 
-    printf("total lines: %ld\n", totalLines);
+//    printf("total lines: %ld\n", totalLines);
 
     Node* linesInBlocks = initEmptyLinkedList();
     long totalLinesRead = 0;
     long start = 0;
     BlockCalculation blockCalc = calculateAmountOfLinesInBlock(totalLinesRead, start, totalLines, maxBitsInBlock, &headerInputHandler);
     while (blockCalc.amountOfLines > 0) {
-        //printf("lines in next block = %lu, bits=%lu, start= %lu\n", blockCalc.amountOfLines, blockCalc.bits, start);
+        printf("lines in next block = %lu, bits=%lu, start= %lu\n", blockCalc.amountOfLines, blockCalc.bits, start);
         fread(inputBuffer, sizeof(uint64_t), blockCalc.bits / 64 + 1, inputFile);
         totalLinesRead += blockCalc.amountOfLines;
         append(&linesInBlocks, (int) blockCalc.amountOfLines);
+        printf("%lu\n", totalLinesRead);
         sortBlock(inputBuffer, start, &headerInputHandler, &blokFileOutputHandler, &headerOutputHandler, blockCalc.amountOfLines);
         fseek(inputFile, -8, SEEK_CUR);
         start = blockCalc.bits % 64;
@@ -174,7 +175,7 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
 
     flushBits(&blokFileOutputHandler);
     flushBits(&headerOutputHandler);
-    printf("start = %ld, num lines: %ld\n", start, totalLines);
+    //printf("start = %ld, num lines: %ld\n", start, totalLines);
 
     // merge the blocks
     int* linesInBlocksArray = toArray(linesInBlocks);
@@ -190,7 +191,7 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     for (int i = 0; i < lineLengthsStart - headerPosition; ++i) {
         fprintf(outputFile,"%c", tree[i]);
     }
-    printf("\n");
+    //printf("\n");
 
     // Cleanup
     freeBitInputHandler(&headerInputHandler);

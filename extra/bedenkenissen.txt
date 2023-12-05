@@ -14,5 +14,8 @@ bv:
 
 zeggen waarom het toevoegen van lengtes wel of niet goed was qua performantie.
 realloc is mss niet het beste want da kan ff dubbel zoveel geheugen gebruiken
-lijnlengtes in de heqder opslqqn heeft voordelen: super snel de lengtes weten om aantal lijnen in blok te weten,
+lijnlengtes in de header opslqqn heeft voordelen: super snel de lengtes weten om aantal lijnen in blok te weten,
 we willen ook niet decompressen in ons sort.
+
+uint64 alignen suckt hard.
+

@@ -20,9 +20,10 @@ void initInputHandlers(BitInputHandler* inputHandlersLength, BitInputHandler* in
         setAtInputPosition(&handler, &position);
         inputHandlersLength[blockNr] = handler;
 
-        fseek(blockFile, bit / 8, SEEK_SET);
+        fseek(blockFile, (bit / 64) * 8, SEEK_SET);
+        printf("bit for block %d is %ld\n", blockNr, bit);
         inputHandlersBlock[blockNr] = createBitInputHandler(blockFile, 8);
-        readNBits(&inputHandlersBlock[blockNr], bit % 8);
+        readNBits(&inputHandlersBlock[blockNr], bit % 64);
 
         int linesInBlock = linesInBlocks[blockNr];
         printf("%d lines in block %d\n", linesInBlock, nBlocks);
@@ -58,6 +59,10 @@ int compareLines(const uint64_t* line1, const uint64_t* line2, int length1, int 
     return (i == length2) - (i == length1);
 }
 
+int nElementsForLine(int length) {
+    return (length + 63) / 64; // ceil division
+}
+
 int findSmallestBlock(uint64_t** currentLines, const int* currentLineLengths, const int* linesInBlocks, int nBlocks) {
     int smallestBlockNr = -1;
     for (int blockNr = 0; blockNr < nBlocks; ++blockNr) {
@@ -67,19 +72,15 @@ int findSmallestBlock(uint64_t** currentLines, const int* currentLineLengths, co
             }
             uint64_t* line1 = currentLines[blockNr];
             uint64_t* line2 = currentLines[smallestBlockNr];
-            int len1 = currentLineLengths[blockNr] / 64 + 1;
-            int len2 = currentLineLengths[smallestBlockNr] / 64 + 1;
-            printf("l1 = %d, l2 = %d\n", len1, len2);
+            int len1 = nElementsForLine(currentLineLengths[blockNr]);
+            int len2 = nElementsForLine(currentLineLengths[smallestBlockNr]);
+            //printf("l1 = %d, l2 = %d\n", currentLineLengths[blockNr], currentLineLengths[smallestBlockNr]);
             if (compareLines(line1, line2, len1, len2) < 0) {
                 smallestBlockNr = blockNr;
             }
         }
     }
     return smallestBlockNr;
-}
-
-int nElementsForLine(int length) {
-    return (length + 63) / 64; // ceil division
 }
 
 int calcBitsInLastElement(int length) {
@@ -105,6 +106,7 @@ void mergeBlocks(FILE* blockFile, FILE* headerFile, FILE* outputFile, int* lines
     // 2. alle lengtes eens lezen en invullen;
     for (int blockNr = 0; blockNr < nBlocks; ++blockNr) {
         int length = readLength(&inputHandlersLength[blockNr]);
+        printf("initial length = %d\n", length);
         currentLineLengths[blockNr] = length;
 
         int nElements = nElementsForLine(length);
@@ -113,7 +115,9 @@ void mergeBlocks(FILE* blockFile, FILE* headerFile, FILE* outputFile, int* lines
             currentLines[blockNr][elementNr] = readNBits(&inputHandlersBlock[blockNr], 64);
         }
         int bitsInLastElement = calcBitsInLastElement(length);
+        printf("bits in last elements %d\n", bitsInLastElement);
         currentLines[blockNr][nElements - 1] = readNBits(&inputHandlersBlock[blockNr], bitsInLastElement);
+        currentLines[blockNr][nElements - 1] <<= (64 - bitsInLastElement);
     }
 
     for (int _ = 0; _ < totalLines; ++_) {
@@ -131,14 +135,15 @@ void mergeBlocks(FILE* blockFile, FILE* headerFile, FILE* outputFile, int* lines
             outputNBits(&outputHandler, smallestLine[i], 64);
         }
         int bitsInLastElement = calcBitsInLastElement(smallestLineLength);
-        outputNBits(&outputHandler, smallestLine[nElements - 1], bitsInLastElement);
+        outputNBits(&outputHandler, smallestLine[nElements - 1] >> (64 - bitsInLastElement), bitsInLastElement);
 
         // 5. Dan vullen we een nieuwe lijn in op de plaats die we net hebben weggeschreven.
         int newLength = readLength(&inputHandlersLength[smallestBlockNr]);
+        printf("the new length of the smallest line in block %d is %d\n", smallestBlockNr, newLength);
         currentLineLengths[smallestBlockNr] = newLength;
 
         int newNElements = nElementsForLine(newLength);
-        currentLines[smallestBlockNr] = realloc(currentLines[smallestBlockNr], sizeof(uint64_t*) * newNElements);
+        currentLines[smallestBlockNr] = realloc(currentLines[smallestBlockNr], sizeof(uint64_t) * newNElements);
         for (int i = 0; i < newNElements - 1; ++i) {
             currentLines[smallestBlockNr][i] = readNBits(&inputHandlersBlock[smallestBlockNr], 64);
         }

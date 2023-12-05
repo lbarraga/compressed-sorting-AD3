@@ -41,13 +41,11 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
 
     // 8: header pointer, 8: amount of lines, 1: significant bits is last byte of encoding, 1: idem but for header
     uint8_t padding[8 + 8 + 1 + 1] = {0};
-    printf("padding: %lu\n", sizeof(padding));
     fwrite(&padding, sizeof(uint8_t), sizeof(padding), outputFile); // TODO waarom is dit in het begin en niet ook in de footer.
 
     // include tree in the header of the file
     addTreeToHeader(headerTempFile, charCount, codes);
 
-    clock_t start = clock();
     // Encode characters and write to file
     int lineLength = 0;
     long totalLines = 0;
@@ -70,10 +68,6 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
             }
         }
     }
-    clock_t end = clock();
-
-    printf("time taken: %f\n", (double) (end - start) / 1000000);
-    start = clock();
 
     // cleanup input file
     fclose(inputFile);
@@ -106,8 +100,5 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
     fclose(outputFile);
     freeOutputHandler(&outputHandlerOutput);
     freeOutputHandler(&outputHandlerHeader);
-
-    end = clock();
-    printf("time taken: %f\n", (double) (end - start) / 1000000);
 
 }
