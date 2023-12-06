@@ -9,7 +9,8 @@
 #define MAX_CHAR_COUNT 128
 
 // TODO geen int maar uint64t
-void fillFrequencyTable(FILE* file, int* frequencyTable, int bufferSize) {
+void fillFrequencyTable(FILE* file, int* frequencyTable, int m) {
+    long bufferSize = m / 2;
     unsigned char* buffer = malloc(bufferSize);
     size_t bytesRead;
     while ((bytesRead = fread(buffer, 1, bufferSize, file)) > 0) {

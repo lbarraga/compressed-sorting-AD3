@@ -9,7 +9,7 @@ program="/home/lukasbt/Ugent/3de/semester1/AD3/projectAD3/cmake-build-release/pr
 
 # Loop through each test file and run the tests
 for file in "${test_files[@]}"; do
-    echo "Running tests on file: $file"
+    echo " ======================================= Running tests on file: $file ======================================="
 
     # Run the compression and extraction tests
     ./test_compress_extract.sh "$program" "$test_files_dir/$file" 3145728
