@@ -2,6 +2,7 @@
 // Created by lukasbt on 11/27/23.
 //
 
+#include <stdio.h>
 #include "sort.h"
 
 uint64_t extractInterval(uint64_t value, int start, int length) {
