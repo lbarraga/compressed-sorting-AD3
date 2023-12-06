@@ -21,8 +21,8 @@ sorted_file_reference="${original_file}_sorted_reference"
 
 # ----------------------------- compress & extract -----------------------------
 # Compress and extract the file
-systemd-run --scope -p "MemoryMax=${memory_limit}" --user "$program" compress -i "$original_file.txt" -o "$compressed_file.txt" -m "$program_memory" > /dev/null
-systemd-run --scope -p "MemoryMax=${memory_limit}" --user "$program" extract -i "$compressed_file.txt" -o "$extracted_file.txt" -m "$program_memory" > /dev/null
+"$program" compress -i "$original_file.txt" -o "$compressed_file.txt" -m "$program_memory" > /dev/null
+"$program" extract -i "$compressed_file.txt" -o "$extracted_file.txt" -m "$program_memory" > /dev/null
 
 # Compare the original and extracted file
 if cmp -s "$original_file.txt" "$extracted_file.txt"; then
@@ -33,8 +33,8 @@ fi
 
 # ----------------------------- sort & extract -----------------------------
 # Sort the compressed file
-systemd-run --scope -p "MemoryMax=${memory_limit}" --user "$program" sort -i "$compressed_file.txt" -o "$sorted_file.txt" -m "$program_memory" > /dev/null
-systemd-run --scope -p "MemoryMax=${memory_limit}" --user "$program" extract -i "$sorted_file.txt" -o "$extracted_file.txt" -m "$program_memory" > /dev/null
+"$program" sort -i "$compressed_file.txt" -o "$sorted_file.txt" -m "$program_memory" > /dev/null
+"$program" extract -i "$sorted_file.txt" -o "$extracted_file.txt" -m "$program_memory" > /dev/null
 
 sort "$original_file.txt" -o "${sorted_file_reference}.txt"
 
@@ -47,8 +47,8 @@ fi
 
 # ----------------------------- compress & extract after sort -----------------------------
 # compress the sorted and extracted file
-systemd-run --scope -p "MemoryMax=${memory_limit}" --user "$program" compress -i "$extracted_file.txt" -o "$compressed_file.txt" -m "$program_memory" > /dev/null
-systemd-run --scope -p "MemoryMax=${memory_limit}" --user "$program" extract -i "$compressed_file.txt" -o "$extracted_file.txt" -m "$program_memory" > /dev/null
+"$program" compress -i "$extracted_file.txt" -o "$compressed_file.txt" -m "$program_memory" > /dev/null
+"$program" extract -i "$compressed_file.txt" -o "$extracted_file.txt" -m "$program_memory" > /dev/null
 
 # Compare the sorted and extracted file
 if cmp -s "$extracted_file.txt" "${sorted_file_reference}.txt"; then
@@ -58,8 +58,8 @@ else
 fi
 
 # ----------------------------- sort again and extract back -----------------------------
-systemd-run --scope -p "MemoryMax=${memory_limit}" --user "$program" sort -i "$sorted_file.txt" -o "$sorted_file_again.txt" -m "$program_memory" > /dev/null
-systemd-run --scope -p "MemoryMax=${memory_limit}" --user "$program" extract -i "$sorted_file_again.txt" -o "$extracted_file.txt" -m "$program_memory" > /dev/null
+"$program" sort -i "$sorted_file.txt" -o "$sorted_file_again.txt" -m "$program_memory" > /dev/null
+"$program" extract -i "$sorted_file_again.txt" -o "$extracted_file.txt" -m "$program_memory" > /dev/null
 
 # Compare the sorted and extracted file
 if cmp -s "$extracted_file.txt" "${sorted_file_reference}.txt"; then

@@ -6,6 +6,9 @@
 #include "../IO/bit_input.h"
 #include "../IO/bit_input/bit_io.h"
 
+/**
+ * Zet inputbuffers op de juste plekken van de block file en van de line file.
+ */
 void initInputHandlers(BitInputHandler* inputHandlersLength, BitInputHandler* inputHandlersBlock,
                        FILE* headerFile, FILE* blockFile, const int* linesInBlocks, int nBlocks, size_t bufferSize) {
 

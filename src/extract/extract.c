@@ -23,7 +23,7 @@ PrefixTree* buildPrefixTreeFromHeader(FILE* inputFile, long headerPosition) {
         addToPrefixTree(tree, character, code);
         free(code);
     }
-    consumeWhiteSpace(inputFile); // TODO kan weg
+    consumeWhiteSpace(inputFile);
     fseek(inputFile, 8, SEEK_SET); // Go back to beginning + 8 bytes for header position already read
     return tree;
 }

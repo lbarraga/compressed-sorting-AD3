@@ -15,7 +15,7 @@ void addTreeToHeader(FILE* file, int charCount, OPC** codes) {
         if (code) {
             fprintf(file, "%d ", i);
             for (int j = code->length - 1; j >= 0; --j) {
-                fprintf(file, "%lu", (code->code >> j) & 1); // TODO hier ook uint64 voor gebruiken
+                fprintf(file, "%lu", (code->code >> j) & 1);
             }
             fprintf(file, " ");
         }

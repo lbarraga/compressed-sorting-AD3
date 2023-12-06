@@ -43,7 +43,7 @@ void setAtInputPosition(BitInputHandler* handler, InputHandlerPosition* position
 int readLength(BitInputHandler* handler) {
     int ll = (int) readNBits(handler, 5);
     int l = (int) readNBits(handler, ll);
-    return l + 1; // TODO uitleggen waarom +1
+    return l + 1; // Dit is + 1 omdat 0 nooit kan voorkomen en we zo één meer kunnen encoderen.
 }
 
 uint64_t readNBits(BitInputHandler* handler, int nBits) {

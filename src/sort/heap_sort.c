@@ -54,7 +54,7 @@ void heapify(LineInterval* arr, long n, long i, uint64_t* bits) {
 
     if (largest != i) {
         swap(i, largest, arr);
-        heapify(arr, n, largest, bits); // TODO kan voor stack problemen zorgen
+        heapify(arr, n, largest, bits);
     }
 }
 
