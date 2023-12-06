@@ -21,6 +21,7 @@ typedef struct BitOutputHandler {
 BitOutputHandler createOutputHandler(FILE* file, size_t size);
 void outputNBits(BitOutputHandler* handler, uint64_t bits, int length);
 void flushBits(BitOutputHandler* handler);
+void outputLength(BitOutputHandler* handler, int l);
 void printByte(uint8_t byte);
 void freeOutputHandler(BitOutputHandler* handler);
 

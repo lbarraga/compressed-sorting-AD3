@@ -7,7 +7,10 @@
 #include "../IO/bit_input/bit_io.h"
 
 void initInputHandlers(BitInputHandler* inputHandlersLength, BitInputHandler* inputHandlersBlock,
-                       FILE* headerFile, FILE* blockFile, const int* linesInBlocks, int nBlocks) {
+                       FILE* headerFile, FILE* blockFile, const int* linesInBlocks, int nBlocks, size_t bufferSize) {
+
+    size_t singleInputHandlerSize = bufferSize / (4 * nBlocks);
+    //printf("The handlers are of size %lu\n", singleInputHandlerSize);
 
     fseek(headerFile, 0, SEEK_SET);
     BitInputHandler tmpLineHandler = createBitInputHandler(headerFile, 8);
@@ -16,20 +19,20 @@ void initInputHandlers(BitInputHandler* inputHandlersLength, BitInputHandler* in
     for (int blockNr = 0; blockNr < nBlocks; blockNr++) {
 
         InputHandlerPosition position = getInputPosition(&tmpLineHandler);
-        BitInputHandler handler = createBitInputHandler(headerFile, 8);
+        BitInputHandler handler = createBitInputHandler(headerFile, singleInputHandlerSize);
         setAtInputPosition(&handler, &position);
         inputHandlersLength[blockNr] = handler;
 
         fseek(blockFile, (bit / 64) * 8, SEEK_SET);
-        printf("bit for block %d is %ld\n", blockNr, bit);
-        inputHandlersBlock[blockNr] = createBitInputHandler(blockFile, 8);
+        //printf("bit for block %d is %ld\n", blockNr, bit);
+        inputHandlersBlock[blockNr] = createBitInputHandler(blockFile, singleInputHandlerSize);
         readNBits(&inputHandlersBlock[blockNr], bit % 64);
 
         int linesInBlock = linesInBlocks[blockNr];
-        printf("%d lines in block %d\n", linesInBlock, nBlocks);
+        //printf("%d lines in block %d\n", linesInBlock, blockNr);
         for (int _ = 0; _ < linesInBlock; ++_) {
             int length = readLength(&tmpLineHandler);
-            printf("\t%d\n", length);
+            //printf("\t%d\n", length);
             bit += length;
         }
     }
@@ -87,26 +90,26 @@ int calcBitsInLastElement(int length) {
     return length % 64 == 0? 64: length % 64;
 }
 
-void mergeBlocks(FILE* blockFile, FILE* headerFile, FILE* outputFile, int* linesInBlocks, int nBlocks) {
+void mergeBlocks(FILE* blockFile, FILE* headerFile, FILE* outputFile, int* linesInBlocks, int nBlocks, long bufferSize) {
 
     // 0. initialisatie van de lijst met blok pointers en lijst van lengte pointers (kan door positie op te slaan)
     long totalLines = calculateTotalLineAmount(linesInBlocks, nBlocks);
-    printf("there are %d blocks and %lu lines in total\n", nBlocks, totalLines);
+    //printf("there are %d blocks and %lu lines in total\n", nBlocks, totalLines);
 
     BitInputHandler* inputHandlersLength = malloc(sizeof(BitInputHandler) * nBlocks);
     BitInputHandler* inputHandlersBlock = malloc(sizeof(BitInputHandler) * nBlocks);
 
-    BitOutputHandler outputHandler = createOutputHandler(outputFile, 8);
+    BitOutputHandler outputHandler = createOutputHandler(outputFile, bufferSize / 2);
 
     uint64_t** currentLines = malloc(sizeof(uint64_t*) * nBlocks);
     int* currentLineLengths = malloc(sizeof(int) * nBlocks);
 
-    initInputHandlers(inputHandlersLength, inputHandlersBlock, headerFile, blockFile, linesInBlocks, nBlocks);
+    initInputHandlers(inputHandlersLength, inputHandlersBlock, headerFile, blockFile, linesInBlocks, nBlocks, bufferSize);
 
     // 2. alle lengtes eens lezen en invullen;
     for (int blockNr = 0; blockNr < nBlocks; ++blockNr) {
         int length = readLength(&inputHandlersLength[blockNr]);
-        printf("initial length = %d\n", length);
+        //printf("initial length = %d\n", length);
         currentLineLengths[blockNr] = length;
 
         int nElements = nElementsForLine(length);
@@ -115,15 +118,17 @@ void mergeBlocks(FILE* blockFile, FILE* headerFile, FILE* outputFile, int* lines
             currentLines[blockNr][elementNr] = readNBits(&inputHandlersBlock[blockNr], 64);
         }
         int bitsInLastElement = calcBitsInLastElement(length);
-        printf("bits in last elements %d\n", bitsInLastElement);
+        //printf("bits in last elements %d\n", bitsInLastElement);
         currentLines[blockNr][nElements - 1] = readNBits(&inputHandlersBlock[blockNr], bitsInLastElement);
         currentLines[blockNr][nElements - 1] <<= (64 - bitsInLastElement);
     }
 
+    long line = 0;
     for (int _ = 0; _ < totalLines; ++_) {
+        //printf("line: %lu\n", line++);
         // 3. De kleinste vinden we door de tot nu toe kleinste te vergelijken met de volgende en te swappen wanneer nodig.
         int smallestBlockNr = findSmallestBlock(currentLines, currentLineLengths, linesInBlocks, nBlocks);
-        printf("smallest block number is %d\n", smallestBlockNr);
+        //printf("smallest block number is %d\n", smallestBlockNr);
 
         linesInBlocks[smallestBlockNr]--;
 
@@ -139,7 +144,7 @@ void mergeBlocks(FILE* blockFile, FILE* headerFile, FILE* outputFile, int* lines
 
         // 5. Dan vullen we een nieuwe lijn in op de plaats die we net hebben weggeschreven.
         int newLength = readLength(&inputHandlersLength[smallestBlockNr]);
-        printf("the new length of the smallest line in block %d is %d\n", smallestBlockNr, newLength);
+        //printf("the new length of the smallest line in block %d is %d\n", smallestBlockNr, newLength);
         currentLineLengths[smallestBlockNr] = newLength;
 
         int newNElements = nElementsForLine(newLength);

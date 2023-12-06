@@ -63,3 +63,13 @@ void flushBits(BitOutputHandler* handler) {
     //                           ^bytes written^
     fwrite(handler->buffer, sizeof(uint64_t), handler->elementsWritten + 1, handler->outputStream);
 }
+
+int ceilLog22(const int* lineLength) {
+    return (int) sizeof(int) * 8 - __builtin_clz(*lineLength);
+}
+
+void outputLength(BitOutputHandler* handler, int l) {
+    int ll = ceilLog22(&l);
+    outputNBits(handler, ll, 5);
+    outputNBits(handler, l - 1, ll);
+}

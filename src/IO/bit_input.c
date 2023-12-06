@@ -29,10 +29,9 @@ void printUint64t(uint64_t byte) {
 }
 
 InputHandlerPosition getInputPosition(BitInputHandler* handler) {
-    size_t bufferEnd = ftell(handler->inputStream);
     InputHandlerPosition position = {
-            .element = bufferEnd - (handler->size - handler->elementsRead) * 8,
-            .bit = handler->bitsRead
+            .element = handler->filePosition - (handler->size - handler->elementsRead) * 8,
+            .bit = handler->bitsRead,
     };
     return position;
 }
@@ -62,7 +61,7 @@ uint64_t readNBits(BitInputHandler* handler, int nBits) {
     if (handler->elementsRead == handler->size) {
         fseek(handler->inputStream, handler->filePosition, SEEK_SET);
         fread(handler->buffer, sizeof(uint64_t), handler->size, handler->inputStream);
-        handler->filePosition = ftell(handler->inputStream);
+        handler->filePosition += (long) handler->size * 8;
         handler->elementsRead = 0;
     }
 

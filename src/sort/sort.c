@@ -11,6 +11,17 @@
 #include "../tree/linkedList/linkedlist.h"
 #include "block_merge.h"
 
+void copyFile(FILE *inputFile, FILE *outputFile, size_t bufferSize) {
+    unsigned char* buffer = malloc(bufferSize);
+
+    size_t bytesRead;
+    while ((bytesRead = fread(buffer, 1, bufferSize, inputFile)) > 0) {
+        fwrite(buffer, 1, bytesRead, outputFile);
+    }
+
+    free(buffer);
+}
+
 void skipTree(FILE* inputFile) {
     int charCount = consumeInt(inputFile);
     consumeWhiteSpace(inputFile);
@@ -20,19 +31,15 @@ void skipTree(FILE* inputFile) {
     }
 }
 
-int ceilLog22(const int* lineLength) {
-    return (int) sizeof(int) * 8 - __builtin_clz(*lineLength);
-}
-
 void outputLineInterval(const LineInterval* lineInterval, const uint64_t* bits, BitOutputHandler* handler) {
     long s = lineInterval->start;
     long e = lineInterval->start + lineInterval->length;
 
-    printf("start = %ld, length = %d\n", lineInterval->start, lineInterval->length);
-    printf("s / 64 = %ld en e / 64 = %ld\n", s / 64, e / 64);
+    //printf("start = %ld, length = %d\n", lineInterval->start, lineInterval->length);
+    //printf("s / 64 = %ld en e / 64 = %ld\n", s / 64, e / 64);
     int toTake = 64 - (int) (s % 64);
     while (s / 64 != e / 64) {
-        printf("in, toTake = %d\n", toTake);
+        //printf("in, toTake = %d\n", toTake);
 
         uint64_t extracted = extractInterval(bits[s / 64], 64 - toTake ,toTake);
         printUint64t(extracted);
@@ -46,7 +53,7 @@ void outputLineInterval(const LineInterval* lineInterval, const uint64_t* bits, 
         return;
     }
 
-    printf("e - s = %lu\n", e-s);
+    //printf("e - s = %lu\n", e-s);
     uint64_t extracted = extractInterval(bits[s / 64], (int) s % 64, last);
     printUint64t(extracted);
     outputNBits(handler, extracted, last);
@@ -72,7 +79,6 @@ BlockCalculation calculateAmountOfLinesInBlock(long totalLinesRead, long startBi
     BlockCalculation calc = {.amountOfLines = 0, .bits = startBits};
     int length = readLength(headerHandler);
     while (totalLinesRead + calc.amountOfLines < totalLines && calc.bits + length < (long) maxBitsInBlock) {
-        //printf("readLength = %d\n", length);
         calc.bits += length;
         calc.amountOfLines++;
         length = readLength(headerHandler);
@@ -83,13 +89,37 @@ BlockCalculation calculateAmountOfLinesInBlock(long totalLinesRead, long startBi
     return calc;
 }
 
+Node* calculateLinesInBlocks(BitInputHandler* headerHandler, long totalLines, size_t maxBitsInBlock) {
+    Node* linesInBlocks = initEmptyLinkedList();
+
+    long totalLinesRead = 0;
+    long bits = 0;
+
+    while (totalLinesRead < totalLines) {
+        int length = readLength(headerHandler);
+        int nLinesInBlock = 0;
+        while (totalLinesRead + nLinesInBlock < totalLines && bits + length < (long) maxBitsInBlock) {
+            bits += length;
+            nLinesInBlock++;
+            length = readLength(headerHandler);
+        }
+        append(&linesInBlocks, nLinesInBlock);
+        totalLinesRead += nLinesInBlock;
+        bits %= 64;
+    }
+
+    return linesInBlocks;
+}
+
 long sortBlock(uint64_t* bits, long start, BitInputHandler* headerInputHandler, BitOutputHandler* outputHandler, BitOutputHandler* headerOutputHandler, long linesInBlock) {
 
     LineInterval* lineIntervals = malloc(sizeof(LineInterval) * linesInBlock);
-    //printf("lines in block = %lu\n", linesInBlock); TODO alle printf weghalen
+    //printf("lines in block = %lu\n", linesInBlock);
     // Maak een struct voor elke lijn.
     for (int i = 0; i < linesInBlock; ++i) {
+        //printf("i = %d\n", i);
         int lineLength = readLength(headerInputHandler);
+        //printf("length %d\n", lineLength);
         lineIntervals[i].start = start;
         lineIntervals[i].length = lineLength;
         start += lineLength;
@@ -101,12 +131,7 @@ long sortBlock(uint64_t* bits, long start, BitInputHandler* headerInputHandler, 
     // Schrijf de gesorteerde structs uit naar het tijdelijke blok bestand.
     for (int i = 0; i < linesInBlock; ++i) {
         outputLineInterval2(&lineIntervals[i], bits, outputHandler);
-
-        // output sorted line lengths to the temporary header file.
-        int l = lineIntervals[i].length;
-        int ll = ceilLog22(&l);
-        outputNBits(headerOutputHandler, ll, 5);
-        outputNBits(headerOutputHandler, l - 1, ll); // TODO mss nog een output length maken
+        outputLength(headerOutputHandler, lineIntervals[i].length);
     }
 
     free(lineIntervals);
@@ -114,42 +139,55 @@ long sortBlock(uint64_t* bits, long start, BitInputHandler* headerInputHandler, 
     return start;
 }
 
-void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize) {
+void sort(const char *inputFilePath, const char *outputFilePath, int m) {
     // TODO het kan zijn da die consumeWhitespace op het einde van de tree een stuk van de uint64 opeet.
     FILE* inputFile = fopen(inputFilePath, "rb");
     FILE* headerPointer = fopen(inputFilePath, "rb");
-    FILE* blockTempFile = fopen("/home/lukasbt/projectAD3/data/block.temp", "w+b");
-    FILE* headerTempFile = fopen("/home/lukasbt/projectAD3/data/header.tmp", "w+b");
     FILE* outputFile = fopen(outputFilePath, "wb");
+    FILE* blockTempFile = tmpfile();
+    FILE* headerTempFile = tmpfile();
 
     long headerPosition = consumeLong(inputFile);
     long totalLines = consumeLong(inputFile);
     uint8_t significantBitsCodes = consumeUint8_t(inputFile); // amount of bits that are not filler bits in the last byte
     uint8_t significantBitsHeader = consumeUint8_t(inputFile); // same for header, but not line positions are not needed in extract
+    uint8_t isFileSorted = consumeUint8_t(inputFile);
+
+    if (isFileSorted) {
+        rewind(inputFile);
+        copyFile(inputFile, outputFile, m);
+        fclose(inputFile);
+        fclose(headerPointer);
+        fclose(outputFile);
+        fclose(blockTempFile);
+        fclose(headerTempFile);
+        return;
+    }
 
     fseek(headerPointer, headerPosition, SEEK_SET); // set headerPointer
     skipTree(headerPointer);
     long lineLengthsStart = ftell(headerPointer); // TODO zou uiteindelijk weg moeten
 
-    BitInputHandler inputHandler = createBitInputHandler(inputFile, 8);
-    BitInputHandler headerInputHandler = createBitInputHandler(headerPointer, 8);
+    BitInputHandler inputHandler = createBitInputHandler(inputFile, m / 5);
+    BitInputHandler headerInputHandler = createBitInputHandler(headerPointer, m / 5);
 
-    BitOutputHandler blokFileOutputHandler = createOutputHandler(blockTempFile, 8);
-    BitOutputHandler headerOutputHandler = createOutputHandler(headerTempFile, 8);
+    BitOutputHandler blokFileOutputHandler = createOutputHandler(blockTempFile, m / 5);
+    BitOutputHandler headerOutputHandler = createOutputHandler(headerTempFile, m / 5);
 
-//    printf("the header position is %lu\n", headerPosition);
-
-    // uitschrijven naar de file TODO dit moet eigenlijk pas op het einde gebeuren net voor de merge
+    // uitschrijven naar de file
     // Fill in padding with info
     fseek(outputFile, 0, SEEK_SET);
     fwrite(&headerPosition, sizeof(long), 1, outputFile);
     fwrite(&totalLines, sizeof(long), 1, outputFile);
 
     // amount of significant bits in the last byte
+    uint8_t isSorted = 1;
     fwrite(&significantBitsCodes, sizeof(uint8_t), 1, outputFile);
     fwrite(&significantBitsHeader, sizeof(uint8_t), 1, outputFile);
+    fwrite(&isSorted, sizeof(uint8_t), 1, outputFile); // the file is sorted.
 
     // Stap 1: laad nItems geheugen in.
+    int bufferSize = m / 5;
     uint64_t* inputBuffer = malloc(bufferSize);
 
     size_t nItems = bufferSize / sizeof(uint64_t);
@@ -162,11 +200,12 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     long start = 0;
     BlockCalculation blockCalc = calculateAmountOfLinesInBlock(totalLinesRead, start, totalLines, maxBitsInBlock, &headerInputHandler);
     while (blockCalc.amountOfLines > 0) {
-        printf("lines in next block = %lu, bits=%lu, start= %lu\n", blockCalc.amountOfLines, blockCalc.bits, start);
+//        printf("lines in next block = %lu, bits=%lu, start= %lu\n", blockCalc.amountOfLines, blockCalc.bits, start);
         fread(inputBuffer, sizeof(uint64_t), blockCalc.bits / 64 + 1, inputFile);
         totalLinesRead += blockCalc.amountOfLines;
         append(&linesInBlocks, (int) blockCalc.amountOfLines);
         printf("%lu\n", totalLinesRead);
+        //printf("amountoflines = %ld, %ld\n", blockCalc.amountOfLines, totalLinesRead);
         sortBlock(inputBuffer, start, &headerInputHandler, &blokFileOutputHandler, &headerOutputHandler, blockCalc.amountOfLines);
         fseek(inputFile, -8, SEEK_CUR);
         start = blockCalc.bits % 64;
@@ -177,35 +216,43 @@ void sort(const char *inputFilePath, const char *outputFilePath, int bufferSize)
     flushBits(&headerOutputHandler);
     //printf("start = %ld, num lines: %ld\n", start, totalLines);
 
-    // merge the blocks
-    int* linesInBlocksArray = toArray(linesInBlocks);
-    int nBlocks = getLength(linesInBlocks);
-    freeLinkedList(linesInBlocks);
-    mergeBlocks(blockTempFile, headerTempFile, outputFile, linesInBlocksArray, nBlocks);
-
-    // Tree
-    fseek(headerPointer, headerPosition, SEEK_SET); // set headerPointer
-    unsigned char* tree = malloc(sizeof(unsigned char) * (lineLengthsStart - headerPosition));
-    fread(tree, sizeof(unsigned char), lineLengthsStart - headerPosition, headerPointer);
-
-    for (int i = 0; i < lineLengthsStart - headerPosition; ++i) {
-        fprintf(outputFile,"%c", tree[i]);
-    }
-    //printf("\n");
-
-    // Cleanup
+    // Cleanup block sorts
     freeBitInputHandler(&headerInputHandler);
     freeBitInputHandler(&inputHandler);
 
     freeOutputHandler(&headerOutputHandler);
     freeOutputHandler(&blokFileOutputHandler);
 
-    free(linesInBlocksArray);
-
     free(inputBuffer);
-    free(tree);
 
     fclose(inputFile);
+
+
+    // merge the blocks
+    int* linesInBlocksArray = toArray(linesInBlocks);
+    int nBlocks = getLength(linesInBlocks);
+    freeLinkedList(linesInBlocks);
+    printf("merging\n");
+    mergeBlocks(blockTempFile, headerTempFile, outputFile, linesInBlocksArray, nBlocks, bufferSize);
+
+    // Merge cleanup
+    free(linesInBlocksArray);
+    fclose(blockTempFile);
+    fclose(headerTempFile);
+
+    // Tree
+    fseek(headerPointer, headerPosition, SEEK_SET); // set headerPointer
+    long treeLength = lineLengthsStart - headerPosition;
+    unsigned char* tree = malloc(sizeof(unsigned char) * treeLength);
+    fread(tree, sizeof(unsigned char), treeLength, headerPointer);
+
+    for (int i = 0; i < treeLength; ++i) {
+        fprintf(outputFile,"%c", tree[i]);
+    }
+    //printf("\n");
+
+    // Cleanup tree
+    free(tree);
     fclose(outputFile);
 
 }

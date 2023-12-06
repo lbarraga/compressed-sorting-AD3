@@ -8,6 +8,6 @@
 #include <bits/types/FILE.h>
 #include "../tree/linkedList/linkedlist.h"
 
-void mergeBlocks(FILE* blockFile, FILE* headerFile, FILE* outputFile, int* linesInBlocks, int nBlocks);
+void mergeBlocks(FILE* blockFile, FILE* headerFile, FILE* outputFile, int* linesInBlocks, int nBlocks, long bufferSize);
 
 #endif //PROJECTAD3_BLOCK_MERGE_H

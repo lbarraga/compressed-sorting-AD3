@@ -19,6 +19,7 @@ typedef struct BitInputHandler {
 typedef struct InputHandlerPosition {
     size_t element;
     int bit;
+    size_t size;
 } InputHandlerPosition;
 
 InputHandlerPosition getInputPosition(BitInputHandler* handler);

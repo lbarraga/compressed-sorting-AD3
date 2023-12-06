@@ -22,11 +22,6 @@ void addTreeToHeader(FILE* file, int charCount, OPC** codes) {
     }
 }
 
-int ceilLog2(const int* lineLength) {
-    return (int) sizeof(int) * 8 - __builtin_clz(*lineLength);
-}
-
-
 void compressFile(const char *inputFileName, const char *outputFileName, int bufferSize, OPC** codes, int charCount) {
 
     FILE* inputFile = fopen(inputFileName, "r");
@@ -39,8 +34,8 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
     BitOutputHandler outputHandlerOutput = createOutputHandler(outputFile, bufferSize / 2);
     BitOutputHandler outputHandlerHeader = createOutputHandler(headerTempFile, 8);
 
-    // 8: header pointer, 8: amount of lines, 1: significant bits is last byte of encoding, 1: idem but for header
-    uint8_t padding[8 + 8 + 1 + 1] = {0};
+    // 8: header pointer, 8: amount of lines, 1: significant bits is last byte of encoding, 1: idem but for header, 1: 0 for the file is not sorted.
+    uint8_t padding[8 + 8 + 1 + 1 + 1] = {0};
     fwrite(&padding, sizeof(uint8_t), sizeof(padding), outputFile); // TODO waarom is dit in het begin en niet ook in de footer.
 
     // include tree in the header of the file
@@ -59,10 +54,7 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
             lineLength += code->length;
 
             if (ch == '\n') {
-                // output the 5 bits allocated for the length of the length
-                int lineLengthLength = ceilLog2(&lineLength); // will be less than 2^5 = 32
-                outputNBits(&outputHandlerHeader, lineLengthLength, 5);
-                outputNBits(&outputHandlerHeader, lineLength - 1, lineLengthLength);
+                outputLength(&outputHandlerHeader, lineLength);
                 lineLength = 0;
                 totalLines++;
             }
