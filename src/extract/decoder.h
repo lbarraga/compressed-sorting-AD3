@@ -6,6 +6,7 @@
 #define PROJECTAD3_DECODER_H
 
 #include "prefix_tree.h"
+#include <stdio.h>
 
 typedef struct Decoder {
     PrefixTree* prefixTree;

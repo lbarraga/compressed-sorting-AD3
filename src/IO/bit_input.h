@@ -6,6 +6,7 @@
 #define PROJECTAD3_BIT_INPUT_H
 
 #include "../extract/extract.h"
+#include <stddef.h>
 
 typedef struct BitInputHandler {
     uint64_t* buffer;

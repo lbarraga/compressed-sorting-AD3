@@ -22,17 +22,18 @@ void addTreeToHeader(FILE* file, int charCount, OPC** codes) {
     }
 }
 
-void compressFile(const char *inputFileName, const char *outputFileName, int bufferSize, OPC** codes, int charCount) {
+void compressFile(const char *inputFileName, const char *outputFileName, int m, OPC** codes, int charCount) {
 
     FILE* inputFile = fopen(inputFileName, "r");
     FILE* outputFile = fopen(outputFileName, "w");
     FILE* headerTempFile = tmpfile();
 
     // Initialize variables
-    unsigned char* inputBuffer = malloc(bufferSize / 2);
+    long bufferSize = m / 4;
+    unsigned char* inputBuffer = malloc(bufferSize);
 
-    BitOutputHandler outputHandlerOutput = createOutputHandler(outputFile, bufferSize / 2);
-    BitOutputHandler outputHandlerHeader = createOutputHandler(headerTempFile, 8);
+    BitOutputHandler outputHandlerOutput = createOutputHandler(outputFile, m / 4);
+    BitOutputHandler outputHandlerHeader = createOutputHandler(headerTempFile, m / 4);
 
     // 8: header pointer, 8: amount of lines, 1: significant bits is last byte of encoding, 1: idem but for header, 1: 0 for the file is not sorted.
     uint8_t padding[8 + 8 + 1 + 1 + 1] = {0};
@@ -45,7 +46,7 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
     int lineLength = 0;
     long totalLines = 0;
     size_t bytesRead;
-    while ((bytesRead = fread(inputBuffer, 1, bufferSize / 2, inputFile)) > 0) {
+    while ((bytesRead = fread(inputBuffer, 1, bufferSize, inputFile)) > 0) {
         for (size_t i = 0; i < bytesRead; ++i) {
             // write the bits of the code to the output file
             unsigned char ch = inputBuffer[i];
@@ -90,6 +91,7 @@ void compressFile(const char *inputFileName, const char *outputFileName, int buf
 
     // cleanup
     fclose(outputFile);
+    fclose(headerTempFile);
     freeOutputHandler(&outputHandlerOutput);
     freeOutputHandler(&outputHandlerHeader);
 

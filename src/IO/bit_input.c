@@ -4,6 +4,8 @@
 
 #include <malloc.h>
 #include "bit_input.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 BitInputHandler createBitInputHandler(FILE* file, size_t size_bytes) {
     size_t bufferLength = size_bytes / sizeof(uint64_t);

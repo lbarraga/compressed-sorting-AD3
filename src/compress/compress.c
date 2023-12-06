@@ -21,11 +21,13 @@ int calculateLineAmount(FILE* file) {
 
 void compress(const char *inputFile, const char *outputFile, int bufferSize, char *treeFilePath) {
 
-    FILE* file = fopen(treeFilePath, "r");
+    FILE* file;
     if (treeFilePath == NULL) {
         file = tmpfile();
         treeWithOutputFilePointer(inputFile, file, bufferSize);
         fseek(file, 0, SEEK_SET);
+    } else {
+        file = fopen(treeFilePath, "r");
     }
 
 
@@ -35,6 +37,8 @@ void compress(const char *inputFile, const char *outputFile, int bufferSize, cha
 
     parseTreeFile(frequencies, codes, charCount, file);
     compressFile(inputFile, outputFile, bufferSize, codes, charCount);
+
+    fclose(file);
 
     free(frequencies);
     for (int i = 0; i < 128; ++i) {
