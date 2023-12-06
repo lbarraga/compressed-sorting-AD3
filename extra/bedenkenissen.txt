@@ -1,0 +1,21 @@
+Max lijn is 45354. de langste prefix code is 128 lang,
+dus het maximum bits in een lijn is 45354 * 128 = 5805312.
+je hebt ceil(log2(5805312)) = 23 bits nodig om dit voor te stellen en dus ceil(23) = 5 bits om die lengte voor te stellen.
+
+Het eindresultaat ziet er dan zo uit
+
+ll[5 bits] l[ll bits] [l bits]
+
+bv:
+
+00101[5 bits -> 5] 10101[5 bits -> 21] [21 bits]3
+
+
+
+zeggen waarom het toevoegen van lengtes wel of niet goed was qua performantie.
+realloc is mss niet het beste want da kan ff dubbel zoveel geheugen gebruiken
+lijnlengtes in de header opslqqn heeft voordelen: super snel de lengtes weten om aantal lijnen in blok te weten,
+we willen ook niet decompressen in ons sort.
+
+uint64 alignen suckt hard.
+
