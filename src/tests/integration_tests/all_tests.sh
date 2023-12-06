@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-declare -a test_files=("test" "tiny" "small" "smedium" "medium" "large") # "tiny" "small" "smedium" "medium" "large")
+declare -a test_files=("test" "tiny" "small" "smedium" "medium" "large")
 test_files_dir="/home/lukasbt/projectAD3/data"
 program="/home/lukasbt/projectAD3/cmake-build-release/projectAD3"
 
