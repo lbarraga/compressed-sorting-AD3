@@ -24,13 +24,6 @@ void freeOutputHandler(BitOutputHandler* handler) {
     free(handler->buffer);
 }
 
-void printByte(uint8_t byte) {
-    for (int i = 8 - 1; i >= 0; --i) {
-        printf("%u", (byte >> i) & 1);
-    }
-    printf("\n");
-}
-
 void outputNBits(BitOutputHandler* handler, uint64_t bits, int length) {
     // The number of bits exceeds the element's capacity, requiring multiple writes.
     int freeBits = BITS_IN_UINT64_T - handler->bitsWritten;

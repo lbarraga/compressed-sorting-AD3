@@ -21,13 +21,6 @@ void freeBitInputHandler(BitInputHandler* handler) {
     free(handler->buffer);
 }
 
-void printUint64t(uint64_t byte) {
-    for (int i = 64 - 1; i >= 0; --i) {
-        printf("%lu", (byte >> i) & 1);
-    }
-    printf("\n");
-}
-
 InputHandlerPosition getInputPosition(BitInputHandler* handler) {
     InputHandlerPosition position = {
             .element = handler->filePosition - (handler->size - handler->elementsRead) * 8,
