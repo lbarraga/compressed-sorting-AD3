@@ -1,0 +1,9 @@
+Je verslag was goed en afgewerkt.
+Je benchmarks waren goed en je hebt deze goed gepresenteerd in je verslag.
+Je hebt enkel testen geschreven die grote onderdelen (bv. compress) in één keer testen. Je kon het nog beter doen door unit-testen te schrijven waarbij je kleinere onderdelen test (bv. of je een bestand correct kan inlezen).
+Het algoritme die je hebt geïmplementeerd om een orde-bewarende prefix-code op te stellen, is correct en optimaal.
+Je programma kan bestanden correct comprimeren en decomprimeren.
+Je hebt intern sorteren correct geïmplementeerd.
+Je hebt extern sorteren goed geïmplementeerd.
+Je implementatie was voldoende efficiënt, maar er was zeker nog ruimte voor optimalisaties.
+Eindscore voor je project: 3,75/4
